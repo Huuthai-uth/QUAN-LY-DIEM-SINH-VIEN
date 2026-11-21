@@ -1,0 +1,6 @@
+2251120001|IT001|Lap trinh C++|3|8.5
+2251120001|IT002|Co so du lieu|3|7.8
+2251120001|IT003|Toan roi rac|3|9.0
+2251120001|IT004|Mang may tinh|3|8.0
+2251120002|IT002|Co so du lieu|3|7.0
+2251120002|IT003|Toan roi rac|3|8.2
