@@ -1,91 +1,85 @@
 #include "HocPhan.h"
-#include <limits>
+#include <iostream>
+#include <iomanip>
+#include <cctype>
 
 using namespace std;
 
-HocPhan::HocPhan()
-{
-    MaHP = "";
-    TenHP = "";
-    SoTinChi = 0;
-    Diem = 0;
-    CoDiem = false;
-}
-
-bool KiemTraHocPhanHopLe(const HocPhan& hp)
-{
-    if (hp.MaHP.empty() || hp.TenHP.empty())
+bool kiemTraMaHP(const string& maHP) {
+    if (maHP.empty() || maHP.length() > 20) {
         return false;
-
-    if (hp.SoTinChi <= 0)
-        return false;
-
-    if (hp.CoDiem && (hp.Diem < 0 || hp.Diem > 10))
-        return false;
-
+    }
+    for (char c : maHP) {
+        if (!isalnum(static_cast<unsigned char>(c)) && c != '_' && c != '-') {
+            return false;
+        }
+    }
     return true;
 }
 
-void NhapHocPhan(HocPhan& hp)
-{
-    cout << "Nhap ma hoc phan: ";
-    getline(cin >> ws, hp.MaHP);
-
-    cout << "Nhap ten hoc phan: ";
-    getline(cin, hp.TenHP);
-
-    while (true)
-    {
-        cout << "Nhap so tin chi: ";
-        if (cin >> hp.SoTinChi && hp.SoTinChi > 0)
-            break;
-
-        cout << "So tin chi phai la so nguyen duong. Nhap lai!\n";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    }
-
-    int luaChon;
-    while (true)
-    {
-        cout << "Hoc phan da co diem chua? (1: Co, 0: Chua): ";
-        if (cin >> luaChon && (luaChon == 0 || luaChon == 1))
-            break;
-
-        cout << "Lua chon khong hop le. Nhap lai!\n";
-        cin.clear();
-        cin.ignore(numeric_limits<streamsize>::max(), '\n');
-    }
-
-    hp.CoDiem = (luaChon == 1);
-
-    if (hp.CoDiem)
-    {
-        while (true)
-        {
-            cout << "Nhap diem (0 - 10): ";
-            if (cin >> hp.Diem && hp.Diem >= 0 && hp.Diem <= 10)
-                break;
-
-            cout << "Diem phai nam trong khoang 0 den 10. Nhap lai!\n";
-            cin.clear();
-            cin.ignore(numeric_limits<streamsize>::max(), '\n');
-        }
-    }
-    else
-    {
-        hp.Diem = 0;
-    }
+bool kiemTraSoTinChi(int soTinChi) {
+    return soTinChi > 0 && soTinChi <= 15;
 }
 
-void XuatHocPhan(const HocPhan& hp)
-{
-    cout << "Ma hoc phan : " << hp.MaHP << '\n';
-    cout << "Ten hoc phan: " << hp.TenHP << '\n';
-    cout << "So tin chi  : " << hp.SoTinChi << '\n';
+bool kiemTraDiem(float diem) {
+    return diem >= 0.0f && diem <= 10.0f;
+}
 
-    if (hp.CoDiem)
-        cout << "Diem        : " << hp.Diem << '\n';
-    else
-        cout << "Diem        : Chua co diem\n";
+HocPhan* taoHocPhan(const string& maHP, int soTinChi, float diemHe10) {
+    if (!kiemTraMaHP(maHP) || !kiemTraSoTinChi(soTinChi) || !kiemTraDiem(diemHe10)) {
+        return nullptr;
+    }
+    HocPhan* hp = new HocPhan;
+    hp->maHP = maHP;
+    hp->soTinChi = soTinChi;
+    hp->diemHe10 = diemHe10;
+    hp->next = nullptr;
+    return hp;
+}
+
+HocPhan* nhapHocPhan() {
+    string maHP;
+    int soTinChi;
+    float diemHe10;
+
+    while (true) {
+        cout << "Nhap ma hoc phan: ";
+        getline(cin >> ws, maHP);
+        if (kiemTraMaHP(maHP)) {
+            break;
+        }
+        cout << "Ma hoc phan khong hop le! Vui long nhap lai.\n";
+    }
+
+    while (true) {
+        cout << "Nhap so tin chi (1 - 15): ";
+        if (cin >> soTinChi && kiemTraSoTinChi(soTinChi)) {
+            break;
+        }
+        cout << "So tin chi khong hop le! Vui long nhap lai.\n";
+        cin.clear();
+        cin.ignore(10000, '\n');
+    }
+
+    while (true) {
+        cout << "Nhap diem he 10 (0.0 - 10.0): ";
+        if (cin >> diemHe10 && kiemTraDiem(diemHe10)) {
+            cin.ignore(10000, '\n');
+            break;
+        }
+        cout << "Diem khong hop le! Vui long nhap lai.\n";
+        cin.clear();
+        cin.ignore(10000, '\n');
+    }
+
+    return taoHocPhan(maHP, soTinChi, diemHe10);
+}
+
+void xuatHocPhan(const HocPhan* hp) {
+    if (hp == nullptr) {
+        return;
+    }
+    cout << left << setw(14) << hp->maHP
+         << setw(10) << hp->soTinChi
+         << fixed << setprecision(2) << setw(10) << hp->diemHe10 << '\n';
 }

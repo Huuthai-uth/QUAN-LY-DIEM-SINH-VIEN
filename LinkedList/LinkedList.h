@@ -1,35 +1,17 @@
-#ifndef LINKEDLIST_H
-#define LINKEDLIST_H
+#pragma once
+#include "../HocPhan/HocPhan.h"
+#include <string>
 
-#include "HocPhan.h"
+// Các thao tác cơ bản trên danh sách liên kết đơn học phần
+void themHocPhan(HocPhan*& head, HocPhan* hpMoi);
+bool xoaHocPhan(HocPhan*& head, const std::string& maHP);
+HocPhan* timHocPhan(HocPhan* head, const std::string& maHP);
+bool suaDiemHocPhan(HocPhan* head, const std::string& maHP, float diemMoi);
 
-using namespace std;
+// Duyệt xuất và giải phóng bộ nhớ DSLK
+void xuatDanhSachHocPhan(const HocPhan* head);
+int demSoHocPhan(const HocPhan* head);
+void giaiPhongDSLK(HocPhan*& head);
 
-struct NodeHocPhan
-{
-    HocPhan data;
-    NodeHocPhan* next;
-
-    NodeHocPhan(const HocPhan& hp);
-};
-
-struct DanhSachHocPhan
-{
-    NodeHocPhan* head;
-    int soLuong;
-
-    DanhSachHocPhan();
-};
-
-void KhoiTaoDanhSach(DanhSachHocPhan& ds);
-bool ThemHocPhan(DanhSachHocPhan& ds, const HocPhan& hp);
-bool XoaHocPhan(DanhSachHocPhan& ds, const string& maHP);
-NodeHocPhan* TimHocPhan(DanhSachHocPhan& ds, const string& maHP);
-const NodeHocPhan* TimHocPhan(const DanhSachHocPhan& ds, const string& maHP);
-bool SuaHocPhan(DanhSachHocPhan& ds, const string& maHP, const HocPhan& hocPhanMoi);
-void InDanhSachHocPhan(const DanhSachHocPhan& ds);
-int DemHocPhan(const DanhSachHocPhan& ds);
-void GiaiPhongDanhSach(DanhSachHocPhan& ds);
-void SaoChepDanhSach(DanhSachHocPhan& dich, const DanhSachHocPhan& nguon);
-
-#endif
+// Sao chép sâu (Deep Copy) danh sách học phần (cần dùng khi xóa nút có 2 con trên cây AVL/BST)
+HocPhan* saoChepDSLK(const HocPhan* head);

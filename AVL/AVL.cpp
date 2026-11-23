@@ -1,511 +1,226 @@
 #include "AVL.h"
-#include <sstream>
+#include <iostream>
+#include <algorithm>
 
 using namespace std;
 
-// ===================== NODE & CAY =====================
-NodeAVL::NodeAVL(const SinhVien& sv)
-{
-    data = sv;
-    left = NULL;
-    right = NULL;
-    height = 1;
+int getHeight(AVLNode* node) {
+    return (node == nullptr) ? 0 : node->height;
 }
 
-CayAVL::CayAVL()
-{
-    root = NULL;
-    soLuong = 0;
-}
-
-void KhoiTaoCay(CayAVL& cay)
-{
-    cay.root = NULL;
-    cay.soLuong = 0;
-}
-
-static void GiaiPhongNode(NodeAVL* node)
-{
-    if (node == NULL)
-        return;
-
-    GiaiPhongNode(node->left);
-    GiaiPhongNode(node->right);
-    delete node;
-}
-
-void GiaiPhongCay(CayAVL& cay)
-{
-    GiaiPhongNode(cay.root);
-    cay.root = NULL;
-    cay.soLuong = 0;
-}
-
-// ===================== CHIEU CAO & HE SO CAN BANG =====================
-int ChieuCao(const NodeAVL* node)
-{
-    return (node == NULL) ? 0 : node->height;
-}
-
-void CapNhatChieuCao(NodeAVL* node)
-{
-    if (node == NULL)
-        return;
-
-    int cl = ChieuCao(node->left);
-    int cr = ChieuCao(node->right);
-    node->height = 1 + (cl > cr ? cl : cr);
-}
-
-int HeSoCanBang(const NodeAVL* node)
-{
-    if (node == NULL)
+int getBalance(AVLNode* node) {
+    if (node == nullptr) {
         return 0;
-
-    return ChieuCao(node->left) - ChieuCao(node->right);
+    }
+    return getHeight(node->left) - getHeight(node->right);
 }
 
-// ===================== XOAY =====================
+void updateHeight(AVLNode* node) {
+    if (node != nullptr) {
+        node->height = 1 + max(getHeight(node->left), getHeight(node->right));
+    }
+}
 
-NodeAVL* XoayPhai(NodeAVL* y)
-{
-    NodeAVL* x = y->left;
-    NodeAVL* B = x->right;
+AVLNode* rotateRight(AVLNode* y) {
+    if (y == nullptr || y->left == nullptr) {
+        return y;
+    }
+    AVLNode* x = y->left;
+    AVLNode* T2 = x->right;
 
     x->right = y;
-    y->left = B;
+    y->left = T2;
 
-    CapNhatChieuCao(y);
-    CapNhatChieuCao(x);
+    updateHeight(y);
+    updateHeight(x);
 
     return x;
 }
 
-NodeAVL* XoayTrai(NodeAVL* x)
-{
-    NodeAVL* y = x->right;
-    NodeAVL* B = y->left;
+AVLNode* rotateLeft(AVLNode* x) {
+    if (x == nullptr || x->right == nullptr) {
+        return x;
+    }
+    AVLNode* y = x->right;
+    AVLNode* T2 = y->left;
 
     y->left = x;
-    x->right = B;
+    x->right = T2;
 
-    CapNhatChieuCao(x);
-    CapNhatChieuCao(y);
+    updateHeight(x);
+    updateHeight(y);
 
     return y;
 }
 
-// ===================== CAN BANG: LL, RR, LR, RL =====================
-NodeAVL* CanBang(NodeAVL* node)
-{
-    if (node == NULL)
-        return NULL;
-
-    CapNhatChieuCao(node);
-    int hs = HeSoCanBang(node);
-
-    // Lech trai
-    if (hs > 1)
-    {
-        // LR: con trai lech phai -> xoay trai con trai truoc
-        if (HeSoCanBang(node->left) < 0)
-            node->left = XoayTrai(node->left);
-
-        // LL (hoac phan sau cua LR): xoay phai tai node
-        return XoayPhai(node);
+AVLNode* balanceNode(AVLNode* node) {
+    if (node == nullptr) {
+        return nullptr;
     }
 
-    // Lech phai
-    if (hs < -1)
-    {
-        // RL: con phai lech trai -> xoay phai con phai truoc
-        if (HeSoCanBang(node->right) > 0)
-            node->right = XoayPhai(node->right);
+    updateHeight(node);
+    int balance = getBalance(node);
 
-        // RR (hoac phan sau cua RL): xoay trai tai node
-        return XoayTrai(node);
+    // Lệch trái - trái (LL)
+    if (balance > 1 && getBalance(node->left) >= 0) {
+        return rotateRight(node);
     }
 
-    return node;    // da can bang
-}
-
-// ===================== THEM =====================
-static NodeAVL* ThemNode(NodeAVL* node, const SinhVien& sv, bool& thanhCong)
-{
-    if (node == NULL)
-    {
-        thanhCong = true;
-        return new NodeAVL(sv);
+    // Lệch trái - phải (LR)
+    if (balance > 1 && getBalance(node->left) < 0) {
+        node->left = rotateLeft(node->left);
+        return rotateRight(node);
     }
 
-    if (sv.MSSV < node->data.MSSV)
-        node->left = ThemNode(node->left, sv, thanhCong);
-    else if (sv.MSSV > node->data.MSSV)
-        node->right = ThemNode(node->right, sv, thanhCong);
-    else
-    {
-        thanhCong = false;      // trung MSSV
-        return node;
+    // Lệch phải - phải (RR)
+    if (balance < -1 && getBalance(node->right) <= 0) {
+        return rotateLeft(node);
     }
 
-    return CanBang(node);
-}
-
-bool ThemSinhVien(CayAVL& cay, const SinhVien& sv)
-{
-    if (!KiemTraSinhVienHopLe(sv))
-        return false;
-
-    bool thanhCong = false;
-    cay.root = ThemNode(cay.root, sv, thanhCong);
-
-    if (thanhCong)
-        cay.soLuong++;
-
-    return thanhCong;
-}
-
-// ===================== XOA =====================
-static NodeAVL* TimNodeNhoNhat(NodeAVL* node)
-{
-    while (node->left != NULL)
-        node = node->left;
+    // Lệch phải - trái (RL)
+    if (balance < -1 && getBalance(node->right) > 0) {
+        node->right = rotateRight(node->right);
+        return rotateLeft(node);
+    }
 
     return node;
 }
 
-static NodeAVL* XoaNode(NodeAVL* node, const string& mssv, bool& thanhCong)
-{
-    if (node == NULL)
-    {
+AVLNode* taoAVLNode(const SinhVien& sv) {
+    AVLNode* node = new AVLNode;
+    node->data = sv;
+    node->data.dsHocPhan = saoChepDSLK(sv.dsHocPhan);
+    node->left = nullptr;
+    node->right = nullptr;
+    node->height = 1;
+    return node;
+}
+
+AVLNode* insertAVL(AVLNode* root, const SinhVien& sv, bool& thanhCong) {
+    if (!kiemTraSinhVienHopLe(sv)) {
         thanhCong = false;
-        return NULL;
+        return root;
     }
 
-    if (mssv < node->data.MSSV)
-    {
-        node->left = XoaNode(node->left, mssv, thanhCong);
+    if (root == nullptr) {
+        thanhCong = true;
+        return taoAVLNode(sv);
     }
-    else if (mssv > node->data.MSSV)
-    {
-        node->right = XoaNode(node->right, mssv, thanhCong);
+
+    if (sv.mssv < root->data.mssv) {
+        root->left = insertAVL(root->left, sv, thanhCong);
+    } else if (sv.mssv > root->data.mssv) {
+        root->right = insertAVL(root->right, sv, thanhCong);
+    } else {
+        // Trùng MSSV -> không chèn trùng
+        thanhCong = false;
+        return root;
     }
-    else
-    {
+
+    if (!thanhCong) {
+        return root;
+    }
+
+    return balanceNode(root);
+}
+
+namespace {
+    AVLNode* timMinNodeAVL(AVLNode* node) {
+        AVLNode* cur = node;
+        while (cur != nullptr && cur->left != nullptr) {
+            cur = cur->left;
+        }
+        return cur;
+    }
+}
+
+AVLNode* removeAVL(AVLNode* root, const string& mssv, bool& thanhCong) {
+    if (root == nullptr) {
+        thanhCong = false;
+        return nullptr;
+    }
+
+    if (mssv < root->data.mssv) {
+        root->left = removeAVL(root->left, mssv, thanhCong);
+    } else if (mssv > root->data.mssv) {
+        root->right = removeAVL(root->right, mssv, thanhCong);
+    } else {
         thanhCong = true;
 
-        // Truong hop 0 hoac 1 con
-        if (node->left == NULL || node->right == NULL)
-        {
-            NodeAVL* con = (node->left != NULL) ? node->left : node->right;
-            delete node;
-            return con;
+        // Trường hợp 0 hoặc 1 con
+        if (root->left == nullptr || root->right == nullptr) {
+            AVLNode* temp = (root->left != nullptr) ? root->left : root->right;
+            giaiPhongSinhVien(root->data);
+            delete root;
+            return temp;
         }
 
-        NodeAVL* ke = TimNodeNhoNhat(node->right);
-        string mssvKe = ke->data.MSSV;
+        // Trường hợp 2 con: lấy nút nhỏ nhất cây con phải làm nút thế mạng
+        AVLNode* temp = timMinNodeAVL(root->right);
+        giaiPhongSinhVien(root->data);
+        root->data.mssv = temp->data.mssv;
+        root->data.hoTen = temp->data.hoTen;
+        root->data.lop = temp->data.lop;
+        root->data.ngaySinh = temp->data.ngaySinh;
+        root->data.dsHocPhan = saoChepDSLK(temp->data.dsHocPhan);
 
-        node->data = ke->data;
-
-        bool tam = false;
-        node->right = XoaNode(node->right, mssvKe, tam);
+        bool dummy = false;
+        root->right = removeAVL(root->right, temp->data.mssv, dummy);
     }
 
-    return CanBang(node);
+    return balanceNode(root);
 }
 
-bool XoaSinhVien(CayAVL& cay, const string& mssv)
-{
-    bool thanhCong = false;
-    cay.root = XoaNode(cay.root, mssv, thanhCong);
-
-    if (thanhCong)
-        cay.soLuong--;
-
-    return thanhCong;
-}
-
-// ===================== TIM =====================
-NodeAVL* TimSinhVien(CayAVL& cay, const string& mssv)
-{
-    NodeAVL* p = cay.root;
-
-    while (p != NULL)
-    {
-        if (mssv == p->data.MSSV)
-            return p;
-
-        p = (mssv < p->data.MSSV) ? p->left : p->right;
+AVLNode* searchAVL(AVLNode* root, const string& mssv) {
+    AVLNode* cur = root;
+    while (cur != nullptr) {
+        if (mssv == cur->data.mssv) {
+            return cur;
+        }
+        if (mssv < cur->data.mssv) {
+            cur = cur->left;
+        } else {
+            cur = cur->right;
+        }
     }
-
-    return NULL;
+    return nullptr;
 }
 
-const NodeAVL* TimSinhVien(const CayAVL& cay, const string& mssv)
-{
-    const NodeAVL* p = cay.root;
-
-    while (p != NULL)
-    {
-        if (mssv == p->data.MSSV)
-            return p;
-
-        p = (mssv < p->data.MSSV) ? p->left : p->right;
-    }
-
-    return NULL;
-}
-
-// ===================== DUYET =====================
-static void InThongTinNode(const NodeAVL* node)
-{
-    cout << node->data.MSSV << " - " << node->data.HoTen
-         << "  [h=" << node->height
-         << ", hs=" << HeSoCanBang(node) << "]\n";
-}
-
-static void LNR(const NodeAVL* node)
-{
-    if (node == NULL) return;
-    LNR(node->left);
-    InThongTinNode(node);
-    LNR(node->right);
-}
-
-static void NLR(const NodeAVL* node)
-{
-    if (node == NULL) return;
-    InThongTinNode(node);
-    NLR(node->left);
-    NLR(node->right);
-}
-
-static void LRN(const NodeAVL* node)
-{
-    if (node == NULL) return;
-    LRN(node->left);
-    LRN(node->right);
-    InThongTinNode(node);
-}
-
-void DuyetLNR(const CayAVL& cay)
-{
-    if (cay.root == NULL) { cout << "Cay rong.\n"; return; }
-    cout << "\n===== DUYET LNR (tang dan theo MSSV) =====\n";
-    LNR(cay.root);
-}
-
-void DuyetNLR(const CayAVL& cay)
-{
-    if (cay.root == NULL) { cout << "Cay rong.\n"; return; }
-    cout << "\n===== DUYET NLR =====\n";
-    NLR(cay.root);
-}
-
-void DuyetLRN(const CayAVL& cay)
-{
-    if (cay.root == NULL) { cout << "Cay rong.\n"; return; }
-    cout << "\n===== DUYET LRN =====\n";
-    LRN(cay.root);
-}
-
-static void InCay(const NodeAVL* node, int mucLui)
-{
-    if (node == NULL)
+void duyetLNR_AVL(AVLNode* root) {
+    if (root == nullptr) {
         return;
+    }
+    duyetLNR_AVL(root->left);
+    xuatSinhVien(root->data);
+    duyetLNR_AVL(root->right);
+}
 
-    InCay(node->right, mucLui + 6);
+void inCayAVL_KemCanBang(AVLNode* root, int space, int indent) {
+    if (root == nullptr) {
+        return;
+    }
 
-    for (int i = 0; i < mucLui; i++)
+    space += indent;
+
+    inCayAVL_KemCanBang(root->right, space, indent);
+
+    cout << '\n';
+    for (int i = indent; i < space; ++i) {
         cout << ' ';
-    cout << node->data.MSSV << " (h=" << node->height << ")\n";
-
-    InCay(node->left, mucLui + 6);
-}
-
-void InCayDangCay(const CayAVL& cay)
-{
-    if (cay.root == NULL) { cout << "Cay rong.\n"; return; }
-    cout << "\n===== HINH DANG CAY (xoay ngang: phai o tren, trai o duoi) =====\n";
-    InCay(cay.root, 0);
-}
-
-// ===================== KIEM TRA TINH HOP LE CUA AVL =====================
-static bool KiemTraNode(const NodeAVL* node, const string* thap, const string* cao, int& chieuCao)
-{
-    if (node == NULL)
-    {
-        chieuCao = 0;
-        return true;
     }
+    cout << root->data.mssv << " (h=" << root->height
+         << ", bf=" << getBalance(root) << ")\n";
 
-    if (thap != NULL && !(node->data.MSSV > *thap))
-        return false;
-    if (cao != NULL && !(node->data.MSSV < *cao))
-        return false;
-
-    int hl = 0, hr = 0;
-
-    if (!KiemTraNode(node->left, thap, &node->data.MSSV, hl))
-        return false;
-    if (!KiemTraNode(node->right, &node->data.MSSV, cao, hr))
-        return false;
-
-    int diff = hl - hr;
-    if (diff < -1 || diff > 1)
-        return false;
-
-    chieuCao = 1 + (hl > hr ? hl : hr);
-
-    return node->height == chieuCao;
+    inCayAVL_KemCanBang(root->left, space, indent);
 }
 
-static int DemNode(const NodeAVL* node)
-{
-    return (node == NULL) ? 0 : 1 + DemNode(node->left) + DemNode(node->right);
-}
-
-bool KiemTraCayAVL(const CayAVL& cay)
-{
-    int h = 0;
-
-    if (!KiemTraNode(cay.root, NULL, NULL, h))
-        return false;
-
-    return DemNode(cay.root) == cay.soLuong;
-}
-
-// ===================== KIEM THU =====================
-static SinhVien TaoSVTest(int so)
-{
-    ostringstream oss;
-    oss << so;
-
-    SinhVien sv;
-    sv.MSSV = oss.str();
-    while (sv.MSSV.length() < 5)
-        sv.MSSV = "0" + sv.MSSV;
-
-    sv.HoTen = "Sinh Vien " + oss.str();
-    sv.Lop = "TEST01";
-    sv.NgaySinh = "15/03/2005";
-    return sv;
-}
-
-static string KhoaTest(int so)
-{
-    return TaoSVTest(so).MSSV;
-}
-
-static bool Kiem(bool dieuKien, const string& tenTest)
-{
-    cout << (dieuKien ? "[PASS] " : "[FAIL] ") << tenTest << '\n';
-    return dieuKien;
-}
-
-static bool TestXoay(const string& ten, const int khoa[], int n, int gocMongDoi)
-{
-    CayAVL cay;
-    for (int i = 0; i < n; i++)
-        ThemSinhVien(cay, TaoSVTest(khoa[i]));
-
-    bool ok = (cay.root != NULL)
-           && cay.root->data.MSSV == KhoaTest(gocMongDoi)
-           && KiemTraCayAVL(cay);
-
-    GiaiPhongCay(cay);
-    return Kiem(ok, ten);
-}
-
-bool KiemThuCanBang()
-{
-    cout << "\n========== KIEM THU CAY AVL ==========\n";
-    bool tatCa = true;
-    int ll[] = { 30, 20, 10 };
-    int rr[] = { 10, 20, 30 };
-    int lr[] = { 30, 10, 20 };
-    int rl[] = { 10, 30, 20 };
-
-    tatCa &= TestXoay("LL (30,20,10) -> goc 20", ll, 3, 20);
-    tatCa &= TestXoay("RR (10,20,30) -> goc 20", rr, 3, 20);
-    tatCa &= TestXoay("LR (30,10,20) -> goc 20", lr, 3, 20);
-    tatCa &= TestXoay("RL (10,30,20) -> goc 20", rl, 3, 20);
-    {
-        CayAVL cay;
-        ThemSinhVien(cay, TaoSVTest(10));
-        bool trung = ThemSinhVien(cay, TaoSVTest(10));
-        tatCa &= Kiem(!trung && cay.soLuong == 1, "Tu choi MSSV trung");
-        GiaiPhongCay(cay);
+void giaiPhongAVL(AVLNode*& root) {
+    if (root == nullptr) {
+        return;
     }
-
-    {
-        const int N = 1000;
-        CayAVL cay;
-        bool ok = true;
-
-        for (int i = 1; i <= N; i++)
-        {
-            ThemSinhVien(cay, TaoSVTest(i));
-            if (!KiemTraCayAVL(cay))
-                ok = false;
-        }
-
-       
-        int h = ChieuCao(cay.root);
-        ostringstream moTa;
-        moTa << "Chen tang dan 1000 SV van can bang (chieu cao = " << h << ")";
-        tatCa &= Kiem(ok && cay.soLuong == N && h <= 14, moTa.str());
-
-        bool timOK = (TimSinhVien(cay, KhoaTest(500)) != NULL)
-                  && (TimSinhVien(cay, KhoaTest(1)) != NULL)
-                  && (TimSinhVien(cay, KhoaTest(1000)) != NULL)
-                  && (TimSinhVien(cay, KhoaTest(5000)) == NULL);
-        tatCa &= Kiem(timOK, "Tim kiem (co / khong co)");
-
-        bool xoaOK = true;
-        int daXoa = 0;
-        for (int i = 2; i <= N; i += 2)
-        {
-            if (!XoaSinhVien(cay, KhoaTest(i)))
-                xoaOK = false;
-            else
-                daXoa++;
-
-            if (!KiemTraCayAVL(cay))
-                xoaOK = false;
-        }
-        tatCa &= Kiem(xoaOK && cay.soLuong == N - daXoa, "Xoa 500 SV, cay luon can bang");
-
-        tatCa &= Kiem(!XoaSinhVien(cay, KhoaTest(5000)), "Xoa MSSV khong ton tai tra ve false");
-
-        bool rongOK = true;
-        for (int i = 1; i <= N; i += 2)
-        {
-            if (!XoaSinhVien(cay, KhoaTest(i)) || !KiemTraCayAVL(cay))
-                rongOK = false;
-        }
-        tatCa &= Kiem(rongOK && cay.root == NULL && cay.soLuong == 0, "Xoa het -> cay rong");
-
-        GiaiPhongCay(cay);
-    }
-
-    {
-        int khoa[] = { 50, 30, 70, 20, 40, 60, 80, 35, 45 };
-        CayAVL cay;
-        for (int i = 0; i < 9; i++)
-            ThemSinhVien(cay, TaoSVTest(khoa[i]));
-
-        bool ok = XoaSinhVien(cay, KhoaTest(30))
-               && TimSinhVien(cay, KhoaTest(30)) == NULL
-               && TimSinhVien(cay, KhoaTest(35)) != NULL
-               && KiemTraCayAVL(cay);
-        tatCa &= Kiem(ok, "Xoa node co 2 con");
-
-        ok = XoaSinhVien(cay, KhoaTest(50)) && KiemTraCayAVL(cay);
-        tatCa &= Kiem(ok, "Xoa node goc");
-
-        GiaiPhongCay(cay);
-    }
-    cout << (tatCa ? "\n=> TAT CA TEST DEU PASS.\n" : "\n=> CO TEST BI FAIL!\n");
-    return tatCa;
+    giaiPhongAVL(root->left);
+    giaiPhongAVL(root->right);
+    giaiPhongSinhVien(root->data);
+    delete root;
+    root = nullptr;
 }

@@ -1,127 +1,132 @@
 #include "SinhVien.h"
-#include <limits>
+#include <iostream>
+#include <iomanip>
+#include <cctype>
 
 using namespace std;
 
-SinhVien::SinhVien()
-{
-    MSSV = "";
-    HoTen = "";
-    Lop = "";
-    NgaySinh = "";
-    KhoiTaoDanhSach(dsHocPhan);
-}
-
-// Sao chep sau danh sach hoc phan de tranh hai sinh vien dung chung mot vung nho.
-SinhVien::SinhVien(const SinhVien& sv)
-{
-    MSSV = sv.MSSV;
-    HoTen = sv.HoTen;
-    Lop = sv.Lop;
-    NgaySinh = sv.NgaySinh;
-    KhoiTaoDanhSach(dsHocPhan);
-    SaoChepDanhSach(dsHocPhan, sv.dsHocPhan);
-}
-
-SinhVien& SinhVien::operator=(const SinhVien& sv)
-{
-    if (this != &sv)
-    {
-        MSSV = sv.MSSV;
-        HoTen = sv.HoTen;
-        Lop = sv.Lop;
-        NgaySinh = sv.NgaySinh;
-        SaoChepDanhSach(dsHocPhan, sv.dsHocPhan);
+namespace {
+    bool laNamNhuan(int year) {
+        return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
     }
 
-    return *this;
+    int soNgayTrongThang(int month, int year) {
+        switch (month) {
+            case 1: case 3: case 5: case 7: case 8: case 10: case 12:
+                return 31;
+            case 4: case 6: case 9: case 11:
+                return 30;
+            case 2:
+                return laNamNhuan(year) ? 29 : 28;
+            default:
+                return 0;
+        }
+    }
 }
 
-SinhVien::~SinhVien()
-{
-    GiaiPhongDanhSach(dsHocPhan);
-}
-
-bool KiemTraNgaySinh(const string& ngaySinh)
-{
-    // Dinh dang yeu cau: DD/MM/YYYY
-    if (ngaySinh.length() != 10)
+bool kiemTraMSSV(const string& mssv) {
+    if (mssv.empty() || mssv.length() > 20) {
         return false;
-
-    if (ngaySinh[2] != '/' || ngaySinh[5] != '/')
-        return false;
-
-    for (int i = 0; i < 10; i++)
-    {
-        if (i == 2 || i == 5)
-            continue;
-
-        if (ngaySinh[i] < '0' || ngaySinh[i] > '9')
+    }
+    for (char c : mssv) {
+        if (!isalnum(static_cast<unsigned char>(c)) && c != '_') {
             return false;
+        }
+    }
+    return true;
+}
+
+// Định dạng chuẩn: dd/mm/yyyy (10 ký tự)
+bool kiemTraNgaySinh(const string& ngaySinh) {
+    if (ngaySinh.length() != 10 || ngaySinh[2] != '/' || ngaySinh[5] != '/') {
+        return false;
+    }
+    for (int i = 0; i < 10; ++i) {
+        if (i != 2 && i != 5 && !isdigit(static_cast<unsigned char>(ngaySinh[i]))) {
+            return false;
+        }
     }
 
-    int ngay = (ngaySinh[0] - '0') * 10 + (ngaySinh[1] - '0');
-    int thang = (ngaySinh[3] - '0') * 10 + (ngaySinh[4] - '0');
-    int nam = (ngaySinh[6] - '0') * 1000
-            + (ngaySinh[7] - '0') * 100
-            + (ngaySinh[8] - '0') * 10
-            + (ngaySinh[9] - '0');
+    int day = stoi(ngaySinh.substr(0, 2));
+    int month = stoi(ngaySinh.substr(3, 2));
+    int year = stoi(ngaySinh.substr(6, 4));
 
-    if (nam <= 0 || thang < 1 || thang > 12)
+    if (year < 1950 || year > 2026 || month < 1 || month > 12) {
         return false;
-
-    int soNgayTrongThang[] = { 31, 28, 31, 30, 31, 30,
-                               31, 31, 30, 31, 30, 31 };
-
-    bool namNhuan = (nam % 400 == 0) || (nam % 4 == 0 && nam % 100 != 0);
-
-    if (namNhuan)
-        soNgayTrongThang[1] = 29;
-
-    if (ngay < 1 || ngay > soNgayTrongThang[thang - 1])
-        return false;
-
-    return true;
+    }
+    int maxDay = soNgayTrongThang(month, year);
+    return day >= 1 && day <= maxDay;
 }
 
-bool KiemTraSinhVienHopLe(const SinhVien& sv)
-{
-    if (sv.MSSV.empty() || sv.HoTen.empty() || sv.Lop.empty())
-        return false;
-
-    if (!KiemTraNgaySinh(sv.NgaySinh))
-        return false;
-
-    return true;
+bool kiemTraSinhVienHopLe(const SinhVien& sv) {
+    return kiemTraMSSV(sv.mssv) &&
+           !sv.hoTen.empty() &&
+           !sv.lop.empty() &&
+           kiemTraNgaySinh(sv.ngaySinh);
 }
 
-void NhapSinhVien(SinhVien& sv)
-{
-    cout << "Nhap MSSV: ";
-    getline(cin >> ws, sv.MSSV);
+SinhVien taoSinhVien(const string& mssv, const string& hoTen,
+                     const string& lop, const string& ngaySinh) {
+    SinhVien sv;
+    sv.mssv = mssv;
+    sv.hoTen = hoTen;
+    sv.lop = lop;
+    sv.ngaySinh = ngaySinh;
+    sv.dsHocPhan = nullptr;
+    return sv;
+}
 
-    cout << "Nhap ho ten: ";
-    getline(cin, sv.HoTen);
+SinhVien nhapSinhVien() {
+    string mssv, hoTen, lop, ngaySinh;
 
-    cout << "Nhap lop: ";
-    getline(cin, sv.Lop);
-
-    while (true)
-    {
-        cout << "Nhap ngay sinh (DD/MM/YYYY): ";
-        getline(cin, sv.NgaySinh);
-
-        if (KiemTraNgaySinh(sv.NgaySinh))
+    while (true) {
+        cout << "Nhap MSSV: ";
+        getline(cin >> ws, mssv);
+        if (kiemTraMSSV(mssv)) {
             break;
-
-        cout << "Ngay sinh khong hop le. Vi du: 15/03/2005\n";
+        }
+        cout << "MSSV khong hop le! Vui long nhap lai.\n";
     }
+
+    while (true) {
+        cout << "Nhap ho ten: ";
+        getline(cin >> ws, hoTen);
+        if (!hoTen.empty()) {
+            break;
+        }
+        cout << "Ho ten khong duoc de trong!\n";
+    }
+
+    while (true) {
+        cout << "Nhap lop: ";
+        getline(cin >> ws, lop);
+        if (!lop.empty()) {
+            break;
+        }
+        cout << "Lop khong duoc de trong!\n";
+    }
+
+    while (true) {
+        cout << "Nhap ngay sinh (dd/mm/yyyy): ";
+        getline(cin >> ws, ngaySinh);
+        if (kiemTraNgaySinh(ngaySinh)) {
+            break;
+        }
+        cout << "Ngay sinh khong hop le! Dinh dang dung: dd/mm/yyyy.\n";
+    }
+
+    return taoSinhVien(mssv, hoTen, lop, ngaySinh);
 }
 
-void XuatSinhVien(const SinhVien& sv)
-{
-    cout << "MSSV     : " << sv.MSSV << '\n';
-    cout << "Ho ten   : " << sv.HoTen << '\n';
-    cout << "Lop      : " << sv.Lop << '\n';
-    cout << "Ngay sinh: " << sv.NgaySinh << '\n';
+void xuatSinhVien(const SinhVien& sv) {
+    cout << left << setw(14) << sv.mssv
+         << setw(26) << sv.hoTen
+         << setw(14) << sv.lop
+         << setw(14) << sv.ngaySinh
+         << "So HP: " << demSoHocPhan(sv.dsHocPhan) << '\n';
+}
+
+void giaiPhongSinhVien(SinhVien& sv) {
+    giaiPhongDSLK(sv.dsHocPhan);
+    sv.dsHocPhan = nullptr;
 }

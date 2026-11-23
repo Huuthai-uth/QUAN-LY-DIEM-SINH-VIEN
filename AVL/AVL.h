@@ -1,40 +1,33 @@
-#ifndef AVL_H
-#define AVL_H
-#include "SinhVien.h"
+#pragma once
+#include "../SinhVien/SinhVien.h"
+#include <string>
 
-using namespace std;
-
-struct NodeAVL{
+struct AVLNode {
     SinhVien data;
-    NodeAVL* left;
-    NodeAVL* right;
+    AVLNode* left;
+    AVLNode* right;
     int height;
-    NodeAVL(const SinhVien& sv);
 };
 
-struct CayAVL{
-    NodeAVL* root;
-    int soLuong;
+// Các hàm tính chiều cao và hệ số cân bằng (Balance Factor = height(left) - height(right))
+int getHeight(AVLNode* node);
+int getBalance(AVLNode* node);
+void updateHeight(AVLNode* node);
 
-    CayAVL();
-};
-void KhoiTaoCay(CayAVL& cay);
-void GiaiPhongCay(CayAVL& cay);
-int ChieuCao(const NodeAVL* node);
-void CapNhatChieuCao(NodeAVL* node);
-int HeSoCanBang(const NodeAVL* node);
-NodeAVL* XoayPhai(NodeAVL* y);          
-NodeAVL* XoayTrai(NodeAVL* x);          
-NodeAVL* CanBang(NodeAVL* node);       
-bool ThemSinhVien(CayAVL& cay, const SinhVien& sv);
-bool XoaSinhVien(CayAVL& cay, const string& mssv);
-NodeAVL* TimSinhVien(CayAVL& cay, const string& mssv);
-const NodeAVL* TimSinhVien(const CayAVL& cay, const string& mssv);
-void DuyetLNR(const CayAVL& cay);
-void DuyetNLR(const CayAVL& cay);
-void DuyetLRN(const CayAVL& cay);
-void InCayDangCay(const CayAVL& cay);
-bool KiemTraCayAVL(const CayAVL& cay);
-bool KiemThuCanBang();
+// Các phép xoay cân bằng cây (LL, RR, LR, RL)
+AVLNode* rotateRight(AVLNode* y);
+AVLNode* rotateLeft(AVLNode* x);
+AVLNode* balanceNode(AVLNode* node);
 
-#endif
+// Thao tác chính trên cây AVL (khóa MSSV)
+AVLNode* taoAVLNode(const SinhVien& sv);
+AVLNode* insertAVL(AVLNode* root, const SinhVien& sv, bool& thanhCong);
+AVLNode* removeAVL(AVLNode* root, const std::string& mssv, bool& thanhCong);
+AVLNode* searchAVL(AVLNode* root, const std::string& mssv);
+
+// Duyệt cây LNR in danh sách theo MSSV & hiển thị cây kèm hệ số cân bằng
+void duyetLNR_AVL(AVLNode* root);
+void inCayAVL_KemCanBang(AVLNode* root, int space = 0, int indent = 6);
+
+// Giải phóng toàn bộ cây AVL (kèm giải phóng DSLK học phần của từng sinh viên)
+void giaiPhongAVL(AVLNode*& root);

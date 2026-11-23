@@ -1,181 +1,142 @@
 #include "LinkedList.h"
+#include <iostream>
+#include <iomanip>
 
 using namespace std;
 
-NodeHocPhan::NodeHocPhan(const HocPhan& hp)
-{
-    data = hp;
-    next = NULL;
-}
-
-DanhSachHocPhan::DanhSachHocPhan()
-{
-    head = NULL;
-    soLuong = 0;
-}
-
-void KhoiTaoDanhSach(DanhSachHocPhan& ds)
-{
-    ds.head = NULL;
-    ds.soLuong = 0;
-}
-
-NodeHocPhan* TimHocPhan(DanhSachHocPhan& ds, const string& maHP)
-{
-    NodeHocPhan* p = ds.head;
-
-    while (p != NULL)
-    {
-        if (p->data.MaHP == maHP)
-            return p;
-
-        p = p->next;
+void themHocPhan(HocPhan*& head, HocPhan* hpMoi) {
+    if (hpMoi == nullptr) {
+        return;
     }
+    hpMoi->next = nullptr;
 
-    return NULL;
-}
-
-const NodeHocPhan* TimHocPhan(const DanhSachHocPhan& ds, const string& maHP)
-{
-    const NodeHocPhan* p = ds.head;
-
-    while (p != NULL)
-    {
-        if (p->data.MaHP == maHP)
-            return p;
-
-        p = p->next;
-    }
-
-    return NULL;
-}
-
-bool ThemHocPhan(DanhSachHocPhan& ds, const HocPhan& hp)
-{
-    if (!KiemTraHocPhanHopLe(hp))
-        return false;
-
-    if (TimHocPhan(ds, hp.MaHP) != NULL)
-        return false;
-
-    NodeHocPhan* nodeMoi = new NodeHocPhan(hp);
-
-    if (ds.head == NULL)
-    {
-        ds.head = nodeMoi;
-    }
-    else
-    {
-        NodeHocPhan* p = ds.head;
-
-        while (p->next != NULL)
-            p = p->next;
-
-        p->next = nodeMoi;
-    }
-
-    ds.soLuong++;
-    return true;
-}
-
-bool XoaHocPhan(DanhSachHocPhan& ds, const string& maHP)
-{
-    if (ds.head == NULL)
-        return false;
-
-    if (ds.head->data.MaHP == maHP)
-    {
-        NodeHocPhan* temp = ds.head;
-        ds.head = ds.head->next;
-        delete temp;
-        ds.soLuong--;
-        return true;
-    }
-
-    NodeHocPhan* p = ds.head;
-
-    while (p->next != NULL && p->next->data.MaHP != maHP)
-        p = p->next;
-
-    if (p->next == NULL)
-        return false;
-
-    NodeHocPhan* temp = p->next;
-    p->next = temp->next;
-    delete temp;
-    ds.soLuong--;
-
-    return true;
-}
-
-bool SuaHocPhan(DanhSachHocPhan& ds, const string& maHP, const HocPhan& hocPhanMoi)
-{
-    NodeHocPhan* p = TimHocPhan(ds, maHP);
-
-    if (p == NULL)
-        return false;
-
-    if (!KiemTraHocPhanHopLe(hocPhanMoi))
-        return false;
-
-    // Khong cho doi ma hoc phan thanh ma da ton tai o node khac.
-    if (hocPhanMoi.MaHP != maHP && TimHocPhan(ds, hocPhanMoi.MaHP) != NULL)
-        return false;
-
-    p->data = hocPhanMoi;
-    return true;
-}
-
-void InDanhSachHocPhan(const DanhSachHocPhan& ds)
-{
-    if (ds.head == NULL)
-    {
-        cout << "Sinh vien chua co hoc phan nao.\n";
+    if (head == nullptr) {
+        head = hpMoi;
         return;
     }
 
-    cout << "\n========== DANH SACH HOC PHAN ==========\n";
+    // Nếu trùng mã học phần thì cập nhật tín chỉ và điểm thay vì thêm nút trùng mã
+    HocPhan* cur = head;
+    while (cur != nullptr) {
+        if (cur->maHP == hpMoi->maHP) {
+            cur->soTinChi = hpMoi->soTinChi;
+            cur->diemHe10 = hpMoi->diemHe10;
+            delete hpMoi;
+            return;
+        }
+        if (cur->next == nullptr) {
+            break;
+        }
+        cur = cur->next;
+    }
 
-    const NodeHocPhan* p = ds.head;
-    int stt = 1;
+    cur->next = hpMoi;
+}
 
-    while (p != NULL)
-    {
-        cout << "\nHoc phan " << stt++ << ":\n";
-        XuatHocPhan(p->data);
-        p = p->next;
+bool xoaHocPhan(HocPhan*& head, const string& maHP) {
+    if (head == nullptr) {
+        return false;
+    }
+
+    if (head->maHP == maHP) {
+        HocPhan* temp = head;
+        head = head->next;
+        delete temp;
+        return true;
+    }
+
+    HocPhan* prev = head;
+    HocPhan* cur = head->next;
+    while (cur != nullptr) {
+        if (cur->maHP == maHP) {
+            prev->next = cur->next;
+            delete cur;
+            return true;
+        }
+        prev = cur;
+        cur = cur->next;
+    }
+
+    return false;
+}
+
+HocPhan* timHocPhan(HocPhan* head, const string& maHP) {
+    HocPhan* cur = head;
+    while (cur != nullptr) {
+        if (cur->maHP == maHP) {
+            return cur;
+        }
+        cur = cur->next;
+    }
+    return nullptr;
+}
+
+bool suaDiemHocPhan(HocPhan* head, const string& maHP, float diemMoi) {
+    if (!kiemTraDiem(diemMoi)) {
+        return false;
+    }
+    HocPhan* hp = timHocPhan(head, maHP);
+    if (hp == nullptr) {
+        return false;
+    }
+    hp->diemHe10 = diemMoi;
+    return true;
+}
+
+void xuatDanhSachHocPhan(const HocPhan* head) {
+    if (head == nullptr) {
+        cout << "  (Chua co du lieu hoc phan)\n";
+        return;
+    }
+    cout << left << setw(14) << "Ma HP"
+         << setw(10) << "Tin chi"
+         << setw(10) << "Diem 10" << '\n';
+    const HocPhan* cur = head;
+    while (cur != nullptr) {
+        xuatHocPhan(cur);
+        cur = cur->next;
     }
 }
 
-int DemHocPhan(const DanhSachHocPhan& ds)
-{
-    return ds.soLuong;
+int demSoHocPhan(const HocPhan* head) {
+    int count = 0;
+    const HocPhan* cur = head;
+    while (cur != nullptr) {
+        ++count;
+        cur = cur->next;
+    }
+    return count;
 }
 
-void GiaiPhongDanhSach(DanhSachHocPhan& ds)
-{
-    NodeHocPhan* p = ds.head;
-
-    while (p != NULL)
-    {
-        NodeHocPhan* temp = p;
-        p = p->next;
+void giaiPhongDSLK(HocPhan*& head) {
+    while (head != nullptr) {
+        HocPhan* temp = head;
+        head = head->next;
         delete temp;
     }
-
-    ds.head = NULL;
-    ds.soLuong = 0;
+    head = nullptr;
 }
 
-void SaoChepDanhSach(DanhSachHocPhan& dich, const DanhSachHocPhan& nguon)
-{
-    GiaiPhongDanhSach(dich);
-
-    const NodeHocPhan* p = nguon.head;
-
-    while (p != NULL)
-    {
-        ThemHocPhan(dich, p->data);
-        p = p->next;
+HocPhan* saoChepDSLK(const HocPhan* head) {
+    if (head == nullptr) {
+        return nullptr;
     }
+    HocPhan* newHead = nullptr;
+    HocPhan* newTail = nullptr;
+    const HocPhan* cur = head;
+
+    while (cur != nullptr) {
+        HocPhan* nodeMoi = taoHocPhan(cur->maHP, cur->soTinChi, cur->diemHe10);
+        if (nodeMoi != nullptr) {
+            if (newHead == nullptr) {
+                newHead = nodeMoi;
+                newTail = nodeMoi;
+            } else {
+                newTail->next = nodeMoi;
+                newTail = nodeMoi;
+            }
+        }
+        cur = cur->next;
+    }
+    return newHead;
 }
