@@ -7,15 +7,16 @@ struct SinhVien {
     std::string hoTen;
     std::string lop;
     std::string ngaySinh;
-    HocPhan* dsHocPhan; // Danh sách liên kết đơn các học phần đã học
+    HocPhan* dsHocPhan; // Danh sach lien ket don cac hoc phan da hoc
 };
 
-// Kiểm tra dữ liệu sinh viên hợp lệ
+// Kiem tra du lieu sinh vien hop le
 bool kiemTraMSSV(const std::string& mssv);
+bool kiemTraChuoiKhongRong(const std::string& str, size_t maxLen = 100);
 bool kiemTraNgaySinh(const std::string& ngaySinh);
 bool kiemTraSinhVienHopLe(const SinhVien& sv);
 
-// Nhập, xuất và giải phóng dữ liệu 1 sinh viên
+// Nhap, xuat va giai phong du lieu 1 sinh vien
 SinhVien taoSinhVien(const std::string& mssv, const std::string& hoTen,
                      const std::string& lop, const std::string& ngaySinh);
 SinhVien nhapSinhVien();

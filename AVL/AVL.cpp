@@ -4,6 +4,48 @@
 
 using namespace std;
 
+namespace {
+    AVLNode* timMinNodeAVL(AVLNode* node) {
+        AVLNode* cur = node;
+        while (cur != nullptr && cur->left != nullptr) {
+            cur = cur->left;
+        }
+        return cur;
+    }
+
+    AVLNode* insertAVLRecursive(AVLNode* node, const SinhVien& sv, bool& thanhCong) {
+        if (node == nullptr) {
+            thanhCong = true;
+            return taoAVLNode(sv);
+        }
+
+        if (sv.mssv < node->data.mssv) {
+            node->left = insertAVLRecursive(node->left, sv, thanhCong);
+        } else if (sv.mssv > node->data.mssv) {
+            node->right = insertAVLRecursive(node->right, sv, thanhCong);
+        } else {
+            // Trung MSSV -> khong chen trung
+            thanhCong = false;
+            return node;
+        }
+
+        if (!thanhCong) {
+            return node;
+        }
+
+        return balanceNode(node);
+    }
+
+    void ganThongTinSinhVien(SinhVien& dich, const SinhVien& nguon) {
+        giaiPhongSinhVien(dich);
+        dich.mssv = nguon.mssv;
+        dich.hoTen = nguon.hoTen;
+        dich.lop = nguon.lop;
+        dich.ngaySinh = nguon.ngaySinh;
+        dich.dsHocPhan = saoChepDSLK(nguon.dsHocPhan);
+    }
+}
+
 int getHeight(AVLNode* node) {
     return (node == nullptr) ? 0 : node->height;
 }
@@ -25,6 +67,7 @@ AVLNode* rotateRight(AVLNode* y) {
     if (y == nullptr || y->left == nullptr) {
         return y;
     }
+
     AVLNode* x = y->left;
     AVLNode* T2 = x->right;
 
@@ -41,6 +84,7 @@ AVLNode* rotateLeft(AVLNode* x) {
     if (x == nullptr || x->right == nullptr) {
         return x;
     }
+
     AVLNode* y = x->right;
     AVLNode* T2 = y->left;
 
@@ -61,23 +105,23 @@ AVLNode* balanceNode(AVLNode* node) {
     updateHeight(node);
     int balance = getBalance(node);
 
-    // Lệch trái - trái (LL)
+    // Lech trai - trai (LL)
     if (balance > 1 && getBalance(node->left) >= 0) {
         return rotateRight(node);
     }
 
-    // Lệch trái - phải (LR)
+    // Lech trai - phai (LR)
     if (balance > 1 && getBalance(node->left) < 0) {
         node->left = rotateLeft(node->left);
         return rotateRight(node);
     }
 
-    // Lệch phải - phải (RR)
+    // Lech phai - phai (RR)
     if (balance < -1 && getBalance(node->right) <= 0) {
         return rotateLeft(node);
     }
 
-    // Lệch phải - trái (RL)
+    // Lech phai - trai (RL)
     if (balance < -1 && getBalance(node->right) > 0) {
         node->right = rotateRight(node->right);
         return rotateLeft(node);
@@ -88,7 +132,10 @@ AVLNode* balanceNode(AVLNode* node) {
 
 AVLNode* taoAVLNode(const SinhVien& sv) {
     AVLNode* node = new AVLNode;
-    node->data = sv;
+    node->data.mssv = sv.mssv;
+    node->data.hoTen = sv.hoTen;
+    node->data.lop = sv.lop;
+    node->data.ngaySinh = sv.ngaySinh;
     node->data.dsHocPhan = saoChepDSLK(sv.dsHocPhan);
     node->left = nullptr;
     node->right = nullptr;
@@ -97,41 +144,11 @@ AVLNode* taoAVLNode(const SinhVien& sv) {
 }
 
 AVLNode* insertAVL(AVLNode* root, const SinhVien& sv, bool& thanhCong) {
+    thanhCong = false;
     if (!kiemTraSinhVienHopLe(sv)) {
-        thanhCong = false;
         return root;
     }
-
-    if (root == nullptr) {
-        thanhCong = true;
-        return taoAVLNode(sv);
-    }
-
-    if (sv.mssv < root->data.mssv) {
-        root->left = insertAVL(root->left, sv, thanhCong);
-    } else if (sv.mssv > root->data.mssv) {
-        root->right = insertAVL(root->right, sv, thanhCong);
-    } else {
-        // Trùng MSSV -> không chèn trùng
-        thanhCong = false;
-        return root;
-    }
-
-    if (!thanhCong) {
-        return root;
-    }
-
-    return balanceNode(root);
-}
-
-namespace {
-    AVLNode* timMinNodeAVL(AVLNode* node) {
-        AVLNode* cur = node;
-        while (cur != nullptr && cur->left != nullptr) {
-            cur = cur->left;
-        }
-        return cur;
-    }
+    return insertAVLRecursive(root, sv, thanhCong);
 }
 
 AVLNode* removeAVL(AVLNode* root, const string& mssv, bool& thanhCong) {
@@ -147,7 +164,7 @@ AVLNode* removeAVL(AVLNode* root, const string& mssv, bool& thanhCong) {
     } else {
         thanhCong = true;
 
-        // Trường hợp 0 hoặc 1 con
+        // Truong hop 0 hoac 1 con
         if (root->left == nullptr || root->right == nullptr) {
             AVLNode* temp = (root->left != nullptr) ? root->left : root->right;
             giaiPhongSinhVien(root->data);
@@ -155,17 +172,12 @@ AVLNode* removeAVL(AVLNode* root, const string& mssv, bool& thanhCong) {
             return temp;
         }
 
-        // Trường hợp 2 con: lấy nút nhỏ nhất cây con phải làm nút thế mạng
-        AVLNode* temp = timMinNodeAVL(root->right);
-        giaiPhongSinhVien(root->data);
-        root->data.mssv = temp->data.mssv;
-        root->data.hoTen = temp->data.hoTen;
-        root->data.lop = temp->data.lop;
-        root->data.ngaySinh = temp->data.ngaySinh;
-        root->data.dsHocPhan = saoChepDSLK(temp->data.dsHocPhan);
+        // Truong hop 2 con: thay bang nut nho nhat cay con phai
+        AVLNode* minRight = timMinNodeAVL(root->right);
+        ganThongTinSinhVien(root->data, minRight->data);
 
-        bool dummy = false;
-        root->right = removeAVL(root->right, temp->data.mssv, dummy);
+        bool xoaNutTheMang = false;
+        root->right = removeAVL(root->right, minRight->data.mssv, xoaNutTheMang);
     }
 
     return balanceNode(root);
@@ -212,6 +224,13 @@ void inCayAVL_KemCanBang(AVLNode* root, int space, int indent) {
          << ", bf=" << getBalance(root) << ")\n";
 
     inCayAVL_KemCanBang(root->left, space, indent);
+}
+
+int demSoNutAVL(AVLNode* root) {
+    if (root == nullptr) {
+        return 0;
+    }
+    return 1 + demSoNutAVL(root->left) + demSoNutAVL(root->right);
 }
 
 void giaiPhongAVL(AVLNode*& root) {

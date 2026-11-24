@@ -1,47 +1,32 @@
 {
-    "version": "2.0.0",
-    "tasks": [
-        {
-            "label": "Build C++",
-            "type": "shell",
-            "command": "g++",
-            "args": [
-                "-std=c++11",
-                "main.cpp",
-                "../SinhVien/SinhVien.cpp",
-                "../HocPhan/HocPhan.cpp",
-                "../LinkedList/LinkedList.cpp",
-                "-I../SinhVien",
-                "-I../HocPhan",
-                "-I../LinkedList",
-                "-o",
-                "test.exe"
-            ],
-            "options": {
-                "cwd": "${workspaceFolder}/Main"
-            },
-            "problemMatcher": ["$gcc"]
-        },
-        {
-            "label": "Run C++",
-            "type": "shell",
-            "command": ".\\test.exe",
-            "options": {
-                "cwd": "${workspaceFolder}/Main"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Build and Run",
-            "dependsOrder": "sequence",
-            "dependsOn": [
-                "Build C++",
-                "Run C++"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            }
-        }
-    ]
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "label": "Build & Run Project",
+      "type": "shell",
+      "command": "C:\\MinGW\\bin\\g++.exe",
+      "args": [
+        "-std=c++17",
+        "-g",
+        "Main/main.cpp",
+        "SinhVien/SinhVien.cpp",
+        "HocPhan/HocPhan.cpp",
+        "LinkedList/LinkedList.cpp",
+        "AVL/AVL.cpp",
+        "BST/BST.cpp",
+        "FileManager/FileManager.cpp",
+        "QuanLyDiem/QuanLyDiem.cpp",
+        "QuickSort/QuickSort.cpp",
+        "ThongKe/ThongKe.cpp",
+        "-o",
+        "Main/main.exe",
+        "&&",
+        ".\\Main\\main.exe"
+      ],
+      "group": {
+        "kind": "build",
+        "isDefault": true
+      }
+    }
+  ]
 }

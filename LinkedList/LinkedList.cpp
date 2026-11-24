@@ -15,10 +15,11 @@ void themHocPhan(HocPhan*& head, HocPhan* hpMoi) {
         return;
     }
 
-    // Nếu trùng mã học phần thì cập nhật tín chỉ và điểm thay vì thêm nút trùng mã
+    // Neu trung ma hoc phan thi cap nhat ten, tin chi va diem, giai phong hpMoi
     HocPhan* cur = head;
     while (cur != nullptr) {
         if (cur->maHP == hpMoi->maHP) {
+            cur->tenHP = hpMoi->tenHP;
             cur->soTinChi = hpMoi->soTinChi;
             cur->diemHe10 = hpMoi->diemHe10;
             delete hpMoi;
@@ -88,7 +89,8 @@ void xuatDanhSachHocPhan(const HocPhan* head) {
         cout << "  (Chua co du lieu hoc phan)\n";
         return;
     }
-    cout << left << setw(14) << "Ma HP"
+    cout << left << setw(12) << "Ma HP"
+         << setw(28) << "Ten HP"
          << setw(10) << "Tin chi"
          << setw(10) << "Diem 10" << '\n';
     const HocPhan* cur = head;
@@ -126,7 +128,7 @@ HocPhan* saoChepDSLK(const HocPhan* head) {
     const HocPhan* cur = head;
 
     while (cur != nullptr) {
-        HocPhan* nodeMoi = taoHocPhan(cur->maHP, cur->soTinChi, cur->diemHe10);
+        HocPhan* nodeMoi = taoHocPhan(cur->maHP, cur->tenHP, cur->soTinChi, cur->diemHe10);
         if (nodeMoi != nullptr) {
             if (newHead == nullptr) {
                 newHead = nodeMoi;

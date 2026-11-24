@@ -1,11 +1,16 @@
-#ifndef THONGKE_H
-#define THONGKE_H
+#pragma once
+#include <string>
+#include "../AVL/AVL.h"
+#include "../QuanLyDiem/QuanLyDiem.h"
 
-#include "QuanLyDiem.h"
+// Thong ke so luong sinh vien theo tung lop (duyet cay AVL)
+void thongKeTheoLopAVL(AVLNode* root);
 
-void thongKeTheoLop(const DanhSachSV& ds);
-void thongKeHocLuc(const DanhSachSV& ds);
-void canhBaoHocVu(const DanhSachSV& ds);
-void top10SinhVien(const DanhSachSV& ds);
+// Thong ke so luong sinh vien theo xep loai hoc luc (Xuat sac, Gioi, Kha, Trung binh, Yeu, Chua co diem)
+void thongKeHocLucAVL(AVLNode* root);
 
-#endif
+// Liet ke va thong ke sinh vien bi canh bao hoc vu (GPA he 4 < 1.0)
+void canhBaoHocVuAVL(AVLNode* root);
+
+// In danh sach TOP 10 sinh vien co GPA cao nhat toan truong (dung Quick Sort giam dan)
+void top10SinhVienAVL(AVLNode* root, bool uuTienHe4 = false);

@@ -6,6 +6,9 @@
 using namespace std;
 
 namespace {
+    constexpr int MIN_YEAR = 1950;
+    constexpr int MAX_YEAR = 2026;
+
     bool laNamNhuan(int year) {
         return (year % 4 == 0 && year % 100 != 0) || (year % 400 == 0);
     }
@@ -36,7 +39,19 @@ bool kiemTraMSSV(const string& mssv) {
     return true;
 }
 
-// Định dạng chuẩn: dd/mm/yyyy (10 ký tự)
+bool kiemTraChuoiKhongRong(const string& str, size_t maxLen) {
+    if (str.empty() || str.length() > maxLen) {
+        return false;
+    }
+    for (char c : str) {
+        if (!isspace(static_cast<unsigned char>(c))) {
+            return true;
+        }
+    }
+    return false;
+}
+
+// Dinh dang chuan: dd/mm/yyyy (10 ky tu)
 bool kiemTraNgaySinh(const string& ngaySinh) {
     if (ngaySinh.length() != 10 || ngaySinh[2] != '/' || ngaySinh[5] != '/') {
         return false;
@@ -51,7 +66,7 @@ bool kiemTraNgaySinh(const string& ngaySinh) {
     int month = stoi(ngaySinh.substr(3, 2));
     int year = stoi(ngaySinh.substr(6, 4));
 
-    if (year < 1950 || year > 2026 || month < 1 || month > 12) {
+    if (year < MIN_YEAR || year > MAX_YEAR || month < 1 || month > 12) {
         return false;
     }
     int maxDay = soNgayTrongThang(month, year);
@@ -60,8 +75,8 @@ bool kiemTraNgaySinh(const string& ngaySinh) {
 
 bool kiemTraSinhVienHopLe(const SinhVien& sv) {
     return kiemTraMSSV(sv.mssv) &&
-           !sv.hoTen.empty() &&
-           !sv.lop.empty() &&
+           kiemTraChuoiKhongRong(sv.hoTen, 100) &&
+           kiemTraChuoiKhongRong(sv.lop, 40) &&
            kiemTraNgaySinh(sv.ngaySinh);
 }
 
@@ -91,19 +106,19 @@ SinhVien nhapSinhVien() {
     while (true) {
         cout << "Nhap ho ten: ";
         getline(cin >> ws, hoTen);
-        if (!hoTen.empty()) {
+        if (kiemTraChuoiKhongRong(hoTen, 100)) {
             break;
         }
-        cout << "Ho ten khong duoc de trong!\n";
+        cout << "Ho ten khong hop le hoac de trong!\n";
     }
 
     while (true) {
         cout << "Nhap lop: ";
         getline(cin >> ws, lop);
-        if (!lop.empty()) {
+        if (kiemTraChuoiKhongRong(lop, 40)) {
             break;
         }
-        cout << "Lop khong duoc de trong!\n";
+        cout << "Lop khong hop le hoac de trong!\n";
     }
 
     while (true) {

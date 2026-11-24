@@ -9,25 +9,26 @@ struct AVLNode {
     int height;
 };
 
-// Các hàm tính chiều cao và hệ số cân bằng (Balance Factor = height(left) - height(right))
+// Tinh chieu cao va he so can bang (BF = height(left) - height(right))
 int getHeight(AVLNode* node);
 int getBalance(AVLNode* node);
 void updateHeight(AVLNode* node);
 
-// Các phép xoay cân bằng cây (LL, RR, LR, RL)
+// Cac phep xoay can bang (LL, RR, LR, RL)
 AVLNode* rotateRight(AVLNode* y);
 AVLNode* rotateLeft(AVLNode* x);
 AVLNode* balanceNode(AVLNode* node);
 
-// Thao tác chính trên cây AVL (khóa MSSV)
+// Thao tac chinh tren cay AVL (khoa MSSV)
 AVLNode* taoAVLNode(const SinhVien& sv);
 AVLNode* insertAVL(AVLNode* root, const SinhVien& sv, bool& thanhCong);
 AVLNode* removeAVL(AVLNode* root, const std::string& mssv, bool& thanhCong);
 AVLNode* searchAVL(AVLNode* root, const std::string& mssv);
 
-// Duyệt cây LNR in danh sách theo MSSV & hiển thị cây kèm hệ số cân bằng
+// Duyet cay LNR, hien thi cay kem he so can bang va dem so nut
 void duyetLNR_AVL(AVLNode* root);
 void inCayAVL_KemCanBang(AVLNode* root, int space = 0, int indent = 6);
+int demSoNutAVL(AVLNode* root);
 
-// Giải phóng toàn bộ cây AVL (kèm giải phóng DSLK học phần của từng sinh viên)
+// Giai phong toan bo cay AVL va danh sach hoc phan ben trong
 void giaiPhongAVL(AVLNode*& root);

@@ -1,121 +1,166 @@
 #include "ThongKe.h"
-#include "QuickSort.h"
+#include "../QuickSort/QuickSort.h"
 #include <iostream>
 #include <iomanip>
 #include <string>
+#include <vector>
 
 using namespace std;
 
-static void taoBanSaoDaTinhGPA(const DanhSachSV& nguon, DanhSachSV& dich) {
-    khoiTaoDanhSach(dich, nguon.size > 0 ? nguon.size : 1);
-    for (int i = 0; i < nguon.size; ++i) {
-        themVaoDanhSach(dich, nguon.data[i]);
-        capNhatGPA(dich.data[i]);
-    }
-}
+namespace {
+    constexpr int TOP_GIOI_HAN = 10;
+    constexpr double NGUONG_CANH_BAO_GPA4 = 1.0;
 
-void thongKeTheoLop(const DanhSachSV& ds) {
-    cout << "\n--- THONG KE SINH VIEN THEO LOP ---\n";
-    if (ds.size == 0) {
-        cout << "Danh sach sinh vien rong.\n";
-        return;
-    }
+    struct ThongKeLopItem {
+        string tenLop;
+        int soLuong = 0;
+    };
 
-    string* tenLop = new string[ds.size];
-    int* soLuong = new int[ds.size];
-    int soLop = 0;
+    void demTheoLopDeQuy(AVLNode* node, vector<ThongKeLopItem>& dsLop) {
+        if (node == nullptr) {
+            return;
+        }
+        demTheoLopDeQuy(node->left, dsLop);
 
-    for (int i = 0; i < ds.size; ++i) {
-        int idx = -1;
-        for (int j = 0; j < soLop; ++j) {
-            if (tenLop[j] == ds.data[i].lop) {
-                idx = j;
+        bool daCo = false;
+        for (size_t i = 0; i < dsLop.size(); ++i) {
+            if (dsLop[i].tenLop == node->data.lop) {
+                ++dsLop[i].soLuong;
+                daCo = true;
                 break;
             }
         }
-        if (idx != -1) {
-            ++soLuong[idx];
-        } else {
-            tenLop[soLop] = ds.data[i].lop;
-            soLuong[soLop] = 1;
-            ++soLop;
+        if (!daCo) {
+            dsLop.push_back({node->data.lop, 1});
         }
+
+        demTheoLopDeQuy(node->right, dsLop);
     }
 
-    for (int i = 0; i < soLop; ++i) {
-        cout << "Lop " << tenLop[i] << ": " << soLuong[i] << " sinh vien\n";
-    }
-
-    delete[] tenLop;
-    delete[] soLuong;
-}
-
-void thongKeHocLuc(const DanhSachSV& ds) {
-    const string muc[5] = {"Xuat sac", "Gioi", "Kha", "Trung binh", "Yeu"};
-    int dem[5] = {0, 0, 0, 0, 0};
-
-    DanhSachSV tam;
-    taoBanSaoDaTinhGPA(ds, tam);
-
-    for (int i = 0; i < tam.size; ++i) {
-        string xl = xepLoaiHocLuc(tam.data[i].gpa10);
-        for (int m = 0; m < 5; ++m) {
-            if (muc[m] == xl) {
-                ++dem[m];
-                break;
-            }
+    void demHocLucDeQuy(AVLNode* node,
+                        int& xuatSac, int& gioi, int& kha,
+                        int& trungBinh, int& yeu, int& chuaCoDiem) {
+        if (node == nullptr) {
+            return;
         }
+        demHocLucDeQuy(node->left, xuatSac, gioi, kha, trungBinh, yeu, chuaCoDiem);
+
+        KetQuaDiem kq = tinhKetQuaHocTap(node->data);
+        if (kq.xepLoai == "Xuat sac") ++xuatSac;
+        else if (kq.xepLoai == "Gioi") ++gioi;
+        else if (kq.xepLoai == "Kha") ++kha;
+        else if (kq.xepLoai == "Trung binh") ++trungBinh;
+        else if (kq.xepLoai == "Yeu") ++yeu;
+        else ++chuaCoDiem;
+
+        demHocLucDeQuy(node->right, xuatSac, gioi, kha, trungBinh, yeu, chuaCoDiem);
     }
 
-    cout << "\n--- THONG KE HOC LUC ---\n";
-    for (int m = 0; m < 5; ++m) {
-        cout << muc[m] << ": " << dem[m] << " sinh vien\n";
-    }
+    void duyetCanhBaoDeQuy(AVLNode* node, int& dem) {
+        if (node == nullptr) {
+            return;
+        }
+        duyetCanhBaoDeQuy(node->left, dem);
 
-    giaiPhongDanhSach(tam);
-}
-
-void canhBaoHocVu(const DanhSachSV& ds) {
-    DanhSachSV tam;
-    taoBanSaoDaTinhGPA(ds, tam);
-
-    cout << "\n--- DANH SACH CANH BAO HOC VU (GPA HE 4 < 1.0) ---\n";
-    int dem = 0;
-    for (int i = 0; i < tam.size; ++i) {
-        if (tam.data[i].gpa4 < 1.0) {
-            cout << tam.data[i].maSV << " | " << tam.data[i].hoTen << " | " << tam.data[i].lop
-                 << " | GPA4: " << fixed << setprecision(2) << tam.data[i].gpa4 << "\n";
+        KetQuaDiem kq = tinhKetQuaHocTap(node->data);
+        if (kq.tongTinChi > 0 && kq.gpaHe4 < NGUONG_CANH_BAO_GPA4) {
+            cout << left << setw(14) << node->data.mssv
+                 << setw(25) << node->data.hoTen
+                 << setw(14) << node->data.lop
+                 << "GPA4: " << fixed << setprecision(2) << kq.gpaHe4
+                 << " | GPA10: " << kq.gpaHe10 << '\n';
             ++dem;
         }
-    }
-    if (dem == 0) cout << "Khong co sinh vien bi canh bao.\n";
-    cout << "Tong so sinh vien canh bao: " << dem << "\n";
 
-    giaiPhongDanhSach(tam);
+        duyetCanhBaoDeQuy(node->right, dem);
+    }
 }
 
-void top10SinhVien(const DanhSachSV& ds) {
-    DanhSachSV tam;
-    taoBanSaoDaTinhGPA(ds, tam);
-    sapXepGiamDan(tam);
-
-    cout << "\n--- TOP 10 SINH VIEN CO GPA HE 4 CAO NHAT ---\n";
-    if (tam.size == 0) {
+void thongKeTheoLopAVL(AVLNode* root) {
+    cout << "\n--- THONG KE SINH VIEN THEO LOP ---\n";
+    if (root == nullptr) {
         cout << "Danh sach sinh vien rong.\n";
-        giaiPhongDanhSach(tam);
         return;
     }
 
-    int soLuong = tam.size < 10 ? tam.size : 10;
-    cout << left << setw(5) << "Hang" << setw(14) << "Ma SV"
-         << setw(25) << "Ho ten" << setw(14) << "Lop"
-         << setw(10) << "GPA4" << "GPA10\n";
-    for (int i = 0; i < soLuong; ++i) {
-        cout << left << setw(5) << i + 1 << setw(14) << tam.data[i].maSV
-             << setw(25) << tam.data[i].hoTen << setw(14) << tam.data[i].lop
-             << fixed << setprecision(2) << setw(10) << tam.data[i].gpa4
-             << tam.data[i].gpa10 << "\n";
+    vector<ThongKeLopItem> dsLop;
+    demTheoLopDeQuy(root, dsLop);
+
+    for (size_t i = 0; i < dsLop.size(); ++i) {
+        cout << "Lop " << dsLop[i].tenLop << ": " << dsLop[i].soLuong << " sinh vien\n";
+    }
+}
+
+void thongKeHocLucAVL(AVLNode* root) {
+    cout << "\n--- THONG KE XEP LOAI HOC LUC ---\n";
+    if (root == nullptr) {
+        cout << "Danh sach sinh vien rong.\n";
+        return;
     }
 
-    giaiPhongDanhSach(tam);
+    int xuatSac = 0, gioi = 0, kha = 0, trungBinh = 0, yeu = 0, chuaCoDiem = 0;
+    demHocLucDeQuy(root, xuatSac, gioi, kha, trungBinh, yeu, chuaCoDiem);
+
+    cout << "Xuat sac    : " << xuatSac << " sinh vien\n";
+    cout << "Gioi        : " << gioi << " sinh vien\n";
+    cout << "Kha         : " << kha << " sinh vien\n";
+    cout << "Trung binh  : " << trungBinh << " sinh vien\n";
+    cout << "Yeu         : " << yeu << " sinh vien\n";
+    cout << "Chua co diem: " << chuaCoDiem << " sinh vien\n";
+}
+
+void canhBaoHocVuAVL(AVLNode* root) {
+    cout << "\n--- DANH SACH CANH BAO HOC VU (GPA HE 4 < 1.0) ---\n";
+    if (root == nullptr) {
+        cout << "Danh sach sinh vien rong.\n";
+        return;
+    }
+
+    int dem = 0;
+    duyetCanhBaoDeQuy(root, dem);
+
+    if (dem == 0) {
+        cout << "Khong co sinh vien bi canh bao hoc vu.\n";
+    }
+    cout << "Tong so sinh vien canh bao: " << dem << '\n';
+}
+
+void top10SinhVienAVL(AVLNode* root, bool uuTienHe4) {
+    cout << "\n--- TOP 10 SINH VIEN CO GPA CAO NHAT ---\n";
+    if (root == nullptr) {
+        cout << "Danh sach sinh vien rong.\n";
+        return;
+    }
+
+    int soLuong = 0;
+    BanGhiXepHangSV* arr = trichXuatTuAVL(root, "", soLuong);
+    if (arr == nullptr || soLuong <= 0) {
+        cout << "Khong co du lieu sinh vien de xep hang.\n";
+        return;
+    }
+
+    if (soLuong > 1) {
+        quickSortGiamDan(arr, 0, soLuong - 1, uuTienHe4);
+    }
+
+    int gioiHan = (soLuong < TOP_GIOI_HAN) ? soLuong : TOP_GIOI_HAN;
+    cout << left << setw(6) << "Hang"
+         << setw(14) << "MSSV"
+         << setw(25) << "Ho ten"
+         << setw(14) << "Lop"
+         << setw(10) << "GPA4"
+         << setw(10) << "GPA10" << '\n';
+    cout << string(79, '-') << '\n';
+
+    for (int i = 0; i < gioiHan; ++i) {
+        cout << left << setw(6) << (i + 1)
+             << setw(14) << arr[i].sv.mssv
+             << setw(25) << arr[i].sv.hoTen
+             << setw(14) << arr[i].sv.lop
+             << fixed << setprecision(2)
+             << setw(10) << arr[i].gpaHe4
+             << setw(10) << arr[i].gpaHe10 << '\n';
+    }
+
+    giaiPhongMangXepHang(arr, soLuong);
 }

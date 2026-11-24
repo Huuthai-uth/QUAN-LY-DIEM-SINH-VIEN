@@ -4,37 +4,6 @@
 
 using namespace std;
 
-BSTNode* taoBSTNode(const SinhVien& sv) {
-    BSTNode* node = new BSTNode;
-    node->data = sv;
-    node->data.dsHocPhan = saoChepDSLK(sv.dsHocPhan);
-    node->left = nullptr;
-    node->right = nullptr;
-    return node;
-}
-
-BSTNode* insertBST(BSTNode* root, const SinhVien& sv, bool& thanhCong) {
-    if (!kiemTraSinhVienHopLe(sv)) {
-        thanhCong = false;
-        return root;
-    }
-
-    if (root == nullptr) {
-        thanhCong = true;
-        return taoBSTNode(sv);
-    }
-
-    if (sv.mssv < root->data.mssv) {
-        root->left = insertBST(root->left, sv, thanhCong);
-    } else if (sv.mssv > root->data.mssv) {
-        root->right = insertBST(root->right, sv, thanhCong);
-    } else {
-        thanhCong = false;
-    }
-
-    return root;
-}
-
 namespace {
     BSTNode* timMinNodeBST(BSTNode* node) {
         BSTNode* cur = node;
@@ -43,6 +12,53 @@ namespace {
         }
         return cur;
     }
+
+    BSTNode* insertBSTRecursive(BSTNode* node, const SinhVien& sv, bool& thanhCong) {
+        if (node == nullptr) {
+            thanhCong = true;
+            return taoBSTNode(sv);
+        }
+
+        if (sv.mssv < node->data.mssv) {
+            node->left = insertBSTRecursive(node->left, sv, thanhCong);
+        } else if (sv.mssv > node->data.mssv) {
+            node->right = insertBSTRecursive(node->right, sv, thanhCong);
+        } else {
+            // Trung MSSV -> khong chen trung
+            thanhCong = false;
+        }
+
+        return node;
+    }
+
+    void ganThongTinBST(SinhVien& dich, const SinhVien& nguon) {
+        giaiPhongSinhVien(dich);
+        dich.mssv = nguon.mssv;
+        dich.hoTen = nguon.hoTen;
+        dich.lop = nguon.lop;
+        dich.ngaySinh = nguon.ngaySinh;
+        dich.dsHocPhan = saoChepDSLK(nguon.dsHocPhan);
+    }
+}
+
+BSTNode* taoBSTNode(const SinhVien& sv) {
+    BSTNode* node = new BSTNode;
+    node->data.mssv = sv.mssv;
+    node->data.hoTen = sv.hoTen;
+    node->data.lop = sv.lop;
+    node->data.ngaySinh = sv.ngaySinh;
+    node->data.dsHocPhan = saoChepDSLK(sv.dsHocPhan);
+    node->left = nullptr;
+    node->right = nullptr;
+    return node;
+}
+
+BSTNode* insertBST(BSTNode* root, const SinhVien& sv, bool& thanhCong) {
+    thanhCong = false;
+    if (!kiemTraSinhVienHopLe(sv)) {
+        return root;
+    }
+    return insertBSTRecursive(root, sv, thanhCong);
 }
 
 BSTNode* removeBST(BSTNode* root, const string& mssv, bool& thanhCong) {
@@ -58,6 +74,7 @@ BSTNode* removeBST(BSTNode* root, const string& mssv, bool& thanhCong) {
     } else {
         thanhCong = true;
 
+        // Truong hop 0 hoac 1 con
         if (root->left == nullptr) {
             BSTNode* temp = root->right;
             giaiPhongSinhVien(root->data);
@@ -71,16 +88,12 @@ BSTNode* removeBST(BSTNode* root, const string& mssv, bool& thanhCong) {
             return temp;
         }
 
-        BSTNode* temp = timMinNodeBST(root->right);
-        giaiPhongSinhVien(root->data);
-        root->data.mssv = temp->data.mssv;
-        root->data.hoTen = temp->data.hoTen;
-        root->data.lop = temp->data.lop;
-        root->data.ngaySinh = temp->data.ngaySinh;
-        root->data.dsHocPhan = saoChepDSLK(temp->data.dsHocPhan);
+        // Truong hop 2 con: thay bang nut nho nhat cay con phai
+        BSTNode* minRight = timMinNodeBST(root->right);
+        ganThongTinBST(root->data, minRight->data);
 
-        bool dummy = false;
-        root->right = removeBST(root->right, temp->data.mssv, dummy);
+        bool xoaNutTheMang = false;
+        root->right = removeBST(root->right, minRight->data.mssv, xoaNutTheMang);
     }
 
     return root;
@@ -106,6 +119,13 @@ int getHeightBST(BSTNode* root) {
         return 0;
     }
     return 1 + max(getHeightBST(root->left), getHeightBST(root->right));
+}
+
+int demSoNutBST(BSTNode* root) {
+    if (root == nullptr) {
+        return 0;
+    }
+    return 1 + demSoNutBST(root->left) + demSoNutBST(root->right);
 }
 
 void duyetLNR_BST(BSTNode* root) {
