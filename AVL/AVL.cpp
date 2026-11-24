@@ -1,10 +1,13 @@
 #include "AVL.h"
 #include <iostream>
-#include <algorithm>
 
 using namespace std;
 
 namespace {
+    int maxInt(int a, int b) {
+        return (a > b) ? a : b;
+    }
+
     AVLNode* timMinNodeAVL(AVLNode* node) {
         AVLNode* cur = node;
         while (cur != nullptr && cur->left != nullptr) {
@@ -59,7 +62,7 @@ int getBalance(AVLNode* node) {
 
 void updateHeight(AVLNode* node) {
     if (node != nullptr) {
-        node->height = 1 + max(getHeight(node->left), getHeight(node->right));
+        node->height = 1 + maxInt(getHeight(node->left), getHeight(node->right));
     }
 }
 

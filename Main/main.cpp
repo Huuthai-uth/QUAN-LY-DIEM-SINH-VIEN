@@ -3,7 +3,6 @@
 #include <limits>
 #include <chrono>
 #include <string>
-#include <algorithm>
 
 #include "../SinhVien/SinhVien.h"
 #include "../HocPhan/HocPhan.h"
@@ -36,6 +35,10 @@ KetQuaFile ghiDuLieuRaFileAVL(AVLNode* rootAVL,
 using namespace std;
 
 namespace {
+    int maxInt(int a, int b) {
+        return (a > b) ? a : b;
+    }
+
     void xoaBoDemNhap() {
         cin.clear();
         cin.ignore(numeric_limits<streamsize>::max(), '\n');
@@ -136,7 +139,7 @@ namespace {
         auto batDauBST = chrono::high_resolution_clock::now();
         for (int i = 1; i <= soLuong; ++i) {
             string numStr = to_string(i);
-            int soZero = max(0, 6 - static_cast<int>(numStr.size()));
+            int soZero = maxInt(0, 6 - static_cast<int>(numStr.size()));
             string mssv = "SV" + string(soZero, '0') + numStr;
             SinhVien sv = taoSinhVien(mssv, "Sinh Vien " + numStr, "CNTT01", "01/01/2005");
             bool ok = false;
@@ -148,7 +151,7 @@ namespace {
         auto batDauAVL = chrono::high_resolution_clock::now();
         for (int i = 1; i <= soLuong; ++i) {
             string numStr = to_string(i);
-            int soZero = max(0, 6 - static_cast<int>(numStr.size()));
+            int soZero = maxInt(0, 6 - static_cast<int>(numStr.size()));
             string mssv = "SV" + string(soZero, '0') + numStr;
             SinhVien sv = taoSinhVien(mssv, "Sinh Vien " + numStr, "CNTT01", "01/01/2005");
             bool ok = false;

@@ -1,10 +1,13 @@
 #include "BST.h"
 #include <iostream>
-#include <algorithm>
 
 using namespace std;
 
 namespace {
+    int maxInt(int a, int b) {
+        return (a > b) ? a : b;
+    }
+
     BSTNode* timMinNodeBST(BSTNode* node) {
         BSTNode* cur = node;
         while (cur != nullptr && cur->left != nullptr) {
@@ -118,7 +121,7 @@ int getHeightBST(BSTNode* root) {
     if (root == nullptr) {
         return 0;
     }
-    return 1 + max(getHeightBST(root->left), getHeightBST(root->right));
+    return 1 + maxInt(getHeightBST(root->left), getHeightBST(root->right));
 }
 
 int demSoNutBST(BSTNode* root) {

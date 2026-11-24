@@ -1,7 +1,6 @@
 #include "FileManager.h"
 #include <fstream>
 #include <sstream>
-#include <vector>
 #include <cctype>
 #include <iomanip>
 
@@ -28,17 +27,38 @@ namespace {
         return s.substr(start, end - start);
     }
 
-    vector<string> tachTheoDauGachDung(const string& line) {
-        vector<string> parts;
-        stringstream ss(line);
-        string item;
-        while (getline(ss, item, '|')) {
-            parts.push_back(loaiBoKyTuXuongDong(item));
+    // Tach chuoi theo dau '|' vao mang dong string* (khong dung std::vector)
+    string* tachTheoDauGachDung(const string& line, int& soPhanTu) {
+        soPhanTu = 0;
+        if (line.empty()) {
+            return nullptr;
         }
-        if (!line.empty() && line.back() == '|') {
-            parts.push_back("");
+
+        int dem = 1;
+        for (size_t i = 0; i < line.size(); ++i) {
+            if (line[i] == '|') {
+                ++dem;
+            }
         }
+
+        string* parts = new string[dem];
+        int idx = 0;
+        size_t start = 0;
+        for (size_t i = 0; i <= line.size(); ++i) {
+            if (i == line.size() || line[i] == '|') {
+                string item = line.substr(start, i - start);
+                parts[idx++] = loaiBoKyTuXuongDong(item);
+                start = i + 1;
+            }
+        }
+
+        soPhanTu = idx;
         return parts;
+    }
+
+    void giaiPhongMangString(string*& arr) {
+        delete[] arr;
+        arr = nullptr;
     }
 
     bool parseSoNguyenAnToan(const string& text, int& giaTri) {
@@ -135,8 +155,10 @@ KetQuaFile docVaNapSinhVienAVL(const string& duongDanFile, AVLNode*& rootAVL) {
             continue;
         }
 
-        vector<string> parts = tachTheoDauGachDung(cleanLine);
-        if (parts.size() != 4) {
+        int soPhanTu = 0;
+        string* parts = tachTheoDauGachDung(cleanLine, soPhanTu);
+        if (parts == nullptr || soPhanTu != 4) {
+            giaiPhongMangString(parts);
             ++kq.soDongLoi;
             continue;
         }
@@ -147,6 +169,7 @@ KetQuaFile docVaNapSinhVienAVL(const string& duongDanFile, AVLNode*& rootAVL) {
             catKhoangTrangHaiDau(parts[2]),
             catKhoangTrangHaiDau(parts[3])
         );
+        giaiPhongMangString(parts);
 
         bool chenThanhCong = false;
         rootAVL = insertAVL(rootAVL, sv, chenThanhCong);
@@ -188,8 +211,10 @@ KetQuaFile docVaGanHocPhanAVL(const string& duongDanFile, AVLNode* rootAVL) {
             continue;
         }
 
-        vector<string> parts = tachTheoDauGachDung(cleanLine);
-        if (parts.size() != 5) {
+        int soPhanTu = 0;
+        string* parts = tachTheoDauGachDung(cleanLine, soPhanTu);
+        if (parts == nullptr || soPhanTu != 5) {
+            giaiPhongMangString(parts);
             ++kq.soDongLoi;
             continue;
         }
@@ -200,8 +225,11 @@ KetQuaFile docVaGanHocPhanAVL(const string& duongDanFile, AVLNode* rootAVL) {
         int soTinChi = 0;
         float diemHe10 = 0.0f;
 
-        if (!parseSoNguyenAnToan(parts[3], soTinChi) ||
-            !parseSoThucFloatAnToan(parts[4], diemHe10)) {
+        bool hopLeSo = parseSoNguyenAnToan(parts[3], soTinChi) &&
+                       parseSoThucFloatAnToan(parts[4], diemHe10);
+        giaiPhongMangString(parts);
+
+        if (!hopLeSo) {
             ++kq.soDongLoi;
             continue;
         }
@@ -265,8 +293,10 @@ KetQuaFile napDuLieuTongHopBST(const string& fileSinhVien,
             continue;
         }
 
-        vector<string> parts = tachTheoDauGachDung(cleanLine);
-        if (parts.size() != 4) {
+        int soPhanTu = 0;
+        string* parts = tachTheoDauGachDung(cleanLine, soPhanTu);
+        if (parts == nullptr || soPhanTu != 4) {
+            giaiPhongMangString(parts);
             ++kq.soDongLoi;
             continue;
         }
@@ -277,6 +307,7 @@ KetQuaFile napDuLieuTongHopBST(const string& fileSinhVien,
             catKhoangTrangHaiDau(parts[2]),
             catKhoangTrangHaiDau(parts[3])
         );
+        giaiPhongMangString(parts);
 
         bool chenThanhCong = false;
         rootBST = insertBST(rootBST, sv, chenThanhCong);
@@ -303,8 +334,10 @@ KetQuaFile napDuLieuTongHopBST(const string& fileSinhVien,
             continue;
         }
 
-        vector<string> parts = tachTheoDauGachDung(cleanLine);
-        if (parts.size() != 5) {
+        int soPhanTu = 0;
+        string* parts = tachTheoDauGachDung(cleanLine, soPhanTu);
+        if (parts == nullptr || soPhanTu != 5) {
+            giaiPhongMangString(parts);
             ++kq.soDongLoi;
             continue;
         }
@@ -315,8 +348,11 @@ KetQuaFile napDuLieuTongHopBST(const string& fileSinhVien,
         int soTinChi = 0;
         float diemHe10 = 0.0f;
 
-        if (!parseSoNguyenAnToan(parts[3], soTinChi) ||
-            !parseSoThucFloatAnToan(parts[4], diemHe10)) {
+        bool hopLeSo = parseSoNguyenAnToan(parts[3], soTinChi) &&
+                       parseSoThucFloatAnToan(parts[4], diemHe10);
+        giaiPhongMangString(parts);
+
+        if (!hopLeSo) {
             ++kq.soDongLoi;
             continue;
         }

@@ -3,7 +3,6 @@
 #include <iostream>
 #include <iomanip>
 #include <string>
-#include <vector>
 
 using namespace std;
 
@@ -16,25 +15,42 @@ namespace {
         int soLuong = 0;
     };
 
-    void demTheoLopDeQuy(AVLNode* node, vector<ThongKeLopItem>& dsLop) {
+    void demSoLopKhacNhauDeQuy(AVLNode* node, ThongKeLopItem* dsLop, int& soLopHienTai) {
         if (node == nullptr) {
             return;
         }
-        demTheoLopDeQuy(node->left, dsLop);
+        demSoLopKhacNhauDeQuy(node->left, dsLop, soLopHienTai);
 
         bool daCo = false;
-        for (size_t i = 0; i < dsLop.size(); ++i) {
+        for (int i = 0; i < soLopHienTai; ++i) {
             if (dsLop[i].tenLop == node->data.lop) {
-                ++dsLop[i].soLuong;
                 daCo = true;
                 break;
             }
         }
         if (!daCo) {
-            dsLop.push_back({node->data.lop, 1});
+            dsLop[soLopHienTai].tenLop = node->data.lop;
+            dsLop[soLopHienTai].soLuong = 0;
+            ++soLopHienTai;
         }
 
-        demTheoLopDeQuy(node->right, dsLop);
+        demSoLopKhacNhauDeQuy(node->right, dsLop, soLopHienTai);
+    }
+
+    void demTheoLopDeQuy(AVLNode* node, ThongKeLopItem* dsLop, int soLop) {
+        if (node == nullptr) {
+            return;
+        }
+        demTheoLopDeQuy(node->left, dsLop, soLop);
+
+        for (int i = 0; i < soLop; ++i) {
+            if (dsLop[i].tenLop == node->data.lop) {
+                ++dsLop[i].soLuong;
+                break;
+            }
+        }
+
+        demTheoLopDeQuy(node->right, dsLop, soLop);
     }
 
     void demHocLucDeQuy(AVLNode* node,
@@ -83,12 +99,23 @@ void thongKeTheoLopAVL(AVLNode* root) {
         return;
     }
 
-    vector<ThongKeLopItem> dsLop;
-    demTheoLopDeQuy(root, dsLop);
+    int tongSV = demSoNutAVL(root);
+    if (tongSV <= 0) {
+        cout << "Danh sach sinh vien rong.\n";
+        return;
+    }
 
-    for (size_t i = 0; i < dsLop.size(); ++i) {
+    ThongKeLopItem* dsLop = new ThongKeLopItem[tongSV];
+    int soLop = 0;
+    demSoLopKhacNhauDeQuy(root, dsLop, soLop);
+    demTheoLopDeQuy(root, dsLop, soLop);
+
+    for (int i = 0; i < soLop; ++i) {
         cout << "Lop " << dsLop[i].tenLop << ": " << dsLop[i].soLuong << " sinh vien\n";
     }
+
+    delete[] dsLop;
+    dsLop = nullptr;
 }
 
 void thongKeHocLucAVL(AVLNode* root) {
