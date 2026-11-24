@@ -4,24 +4,13 @@
     {
       "label": "Build & Run Project",
       "type": "shell",
-      "command": "C:\\MinGW\\bin\\g++.exe",
+      "command": "powershell",
       "args": [
-        "-std=c++17",
-        "-g",
-        "Main/main.cpp",
-        "SinhVien/SinhVien.cpp",
-        "HocPhan/HocPhan.cpp",
-        "LinkedList/LinkedList.cpp",
-        "AVL/AVL.cpp",
-        "BST/BST.cpp",
-        "FileManager/FileManager.cpp",
-        "QuanLyDiem/QuanLyDiem.cpp",
-        "QuickSort/QuickSort.cpp",
-        "ThongKe/ThongKe.cpp",
-        "-o",
-        "Main/main.exe",
-        "&&",
-        ".\\Main\\main.exe"
+        "-NoProfile",
+        "-ExecutionPolicy",
+        "Bypass",
+        "-Command",
+        "C:\\MinGW\\bin\\g++.exe -std=c++17 -g Main/main.cpp SinhVien/SinhVien.cpp HocPhan/HocPhan.cpp LinkedList/LinkedList.cpp AVL/AVL.cpp BST/BST.cpp FileManager/FileManager.cpp QuanLyDiem/QuanLyDiem.cpp QuickSort/QuickSort.cpp ThongKe/ThongKe.cpp -o Main/main.exe; if ($LASTEXITCODE -eq 0) { .\\Main\\main.exe }"
       ],
       "group": {
         "kind": "build",
