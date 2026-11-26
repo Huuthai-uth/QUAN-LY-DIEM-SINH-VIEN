@@ -14,24 +14,6 @@
 #include "../QuickSort/QuickSort.h"
 #include "../ThongKe/ThongKe.h"
 
-#ifndef KET_QUA_FILE_DEFINED
-#define KET_QUA_FILE_DEFINED
-struct KetQuaFile {
-    bool thanhCong = false;
-    int soDongHopLe = 0;
-    int soDongLoi = 0;
-    std::string thongBao;
-};
-#endif
-
-// Khai bao du phong neu FileManager.h tren may chua cap nhat du 2 ham nay
-KetQuaFile napDuLieuTongHopAVL(const std::string& fileSinhVien,
-                               const std::string& fileHocPhan,
-                               AVLNode*& rootAVL);
-KetQuaFile ghiDuLieuRaFileAVL(AVLNode* rootAVL,
-                             const std::string& fileSinhVien,
-                             const std::string& fileHocPhan);
-
 using namespace std;
 
 namespace {
@@ -175,7 +157,7 @@ namespace {
 
     void inMenu() {
         cout << "\n================ QUAN LY DIEM SINH VIEN (AVL) ================\n";
-        cout << "1. Nap du lieu tu file SinhVien & HocPhan\n";
+        cout << "1. Nap lai du lieu tu file SinhVien & HocPhan\n";
         cout << "2. Them sinh vien moi (AVL)\n";
         cout << "3. Xoa sinh vien theo MSSV (AVL)\n";
         cout << "4. Tim kiem sinh vien & xem bang diem\n";
@@ -184,32 +166,37 @@ namespace {
         cout << "7. Sap xep danh sach mot lop giam dan theo GPA (Quick Sort)\n";
         cout << "8. Thong ke (Theo lop / Hoc luc / Canh bao hoc vu / Top 10)\n";
         cout << "9. Hien thi cay AVL kem he so can bang\n";
-        cout << "10. So sanh chieu cao & thoi gian BST vs AVL (MSSV tang dan)\n";
-        cout << "11. Ghi du lieu ra file va thoat\n";
+        cout << "10. So sanh BST vs AVL (MSSV tang dan)\n";
+        cout << "11. Thuc nghiem du lieu lon ngau nhien (>= 10^4 ban ghi) & do thoi gian\n";
+        cout << "12. Ghi du lieu ra file va thoat\n";
         cout << "==============================================================\n";
     }
 }
 
 int main() {
     AVLNode* rootAVL = nullptr;
-    string fileSV = "SinhVien.txt";
-    string fileHP = "HocPhan.txt";
+    string fileSV = "Data/SinhVien.txt";
+    string fileHP = "Data/HocPhan.txt";
+
+    KetQuaFile kqKhoiDong = napDuLieuTongHopAVL(fileSV, fileHP, rootAVL);
+    cout << (kqKhoiDong.thanhCong ? "[OK] " : "[LOI] ") << kqKhoiDong.thongBao << '\n';
 
     while (true) {
         inMenu();
         int chon = nhapSoNguyenAnToan("Nhap lua chon: ");
 
         if (chon == 1) {
-            cout << "Nhap duong dan file sinh vien (mac dinh: SinhVien.txt): ";
+            cout << "Nhap duong dan file sinh vien (mac dinh: " << fileSV << "): ";
             string inpSV;
             getline(cin, inpSV);
             if (!inpSV.empty()) fileSV = inpSV;
 
-            cout << "Nhap duong dan file hoc phan (mac dinh: HocPhan.txt): ";
+            cout << "Nhap duong dan file hoc phan (mac dinh: " << fileHP << "): ";
             string inpHP;
             getline(cin, inpHP);
             if (!inpHP.empty()) fileHP = inpHP;
 
+            giaiPhongAVL(rootAVL);
             KetQuaFile kq = napDuLieuTongHopAVL(fileSV, fileHP, rootAVL);
             cout << (kq.thanhCong ? "[OK] " : "[LOI] ") << kq.thongBao << '\n';
         } else if (chon == 2) {
@@ -303,13 +290,16 @@ int main() {
             int n = nhapSoNguyenAnToan("Nhap so luong MSSV tang dan de so sanh: ");
             soSanhBSTVaAVL_TangDan(n);
         } else if (chon == 11) {
+            int n = nhapSoNguyenAnToan("Nhap so luong ban ghi ngau nhien (>= 10000): ");
+            thucNghiemAVLvaBST(n, false, "Data/SinhVien_NgauNhien.txt");
+        } else if (chon == 12) {
             KetQuaFile kqGhi = ghiDuLieuRaFileAVL(rootAVL, fileSV, fileHP);
             cout << (kqGhi.thanhCong ? "[OK] " : "[LOI] ") << kqGhi.thongBao << '\n';
             giaiPhongAVL(rootAVL);
             cout << "Da giai phong bo nho va thoat chuong trinh.\n";
             break;
         } else {
-            cout << "Lua chon khong nam trong menu (1 - 11)!\n";
+            cout << "Lua chon khong nam trong menu (1 - 12)!\n";
         }
     }
 

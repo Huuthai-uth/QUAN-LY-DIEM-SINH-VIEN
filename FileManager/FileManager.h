@@ -33,3 +33,17 @@ KetQuaFile napDuLieuTongHopBST(const std::string& fileSinhVien,
 KetQuaFile ghiDuLieuRaFileAVL(AVLNode* rootAVL,
                               const std::string& fileSinhVien,
                               const std::string& fileHocPhan);
+
+const int SO_LUONG_DU_LIEU_LON_MAC_DINH = 10000;
+const int SO_LAN_TIM_KIEM_THUC_NGHIEM = 1000;
+
+// Sinh bo du lieu lon ngau nhien (>= 10^4 ban ghi, khong trung MSSV) va tuy chon ghi ra file
+void taoBoDuLieuLonNgauNhien(int soLuong,
+                              SinhVien*& dsSinhVien,
+                              int& soLuongThucTe,
+                              const std::string& duongDanFileGhi = "");
+
+// Do thoi gian chen va tim kiem tren cay AVL va BST (ho tro ca du lieu ngau nhien va tang dan)
+void thucNghiemAVLvaBST(int soLuong = SO_LUONG_DU_LIEU_LON_MAC_DINH,
+                         bool duLieuTangDan = false,
+                         const std::string& duongDanFileGhi = "");
