@@ -14,10 +14,15 @@ BSTNode* insertBST(BSTNode* root, const SinhVien& sv, bool& thanhCong);
 BSTNode* removeBST(BSTNode* root, const std::string& mssv, bool& thanhCong);
 BSTNode* searchBST(BSTNode* root, const std::string& mssv);
 
-// Tinh chieu cao, dem so nut va duyet cay
+// Tinh chieu cao, dem so nut va duyet cay (khu de quy an toan cho du lieu lon)
 int getHeightBST(BSTNode* root);
 int demSoNutBST(BSTNode* root);
 void duyetLNR_BST(BSTNode* root);
+
+// Kiem thu tinh hop le va truong hop cay bi lech
+bool kiemTraBSTHopLe(BSTNode* root);
+bool laCayLechHoanToanBST(BSTNode* root);
+void inThongTinKiemThuBST(BSTNode* root);
 
 // Giai phong toan bo cay BST
 void giaiPhongBST(BSTNode*& root);
